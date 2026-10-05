@@ -3,131 +3,116 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Canares Supplier Portal</title>
 <meta name="theme-color" content="#0b5cab">
-<meta name="description" content="Canares Supplier Portal: purchase orders, ASN, quality documents, RFQs and invoices.">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icons/icon-192.png">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Canares">
+<link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
 <style>
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f4f6f9;--card:#fff;--tx:#1b2430;--mu:#64707f;--bd:#e0e5ec;--pr:#0b5cab;--pr2:#e6f0fa;--ok:#1a7f4b;--wn:#b26a00;--er:#c62828}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10151c;--card:#182029;--tx:#e8edf3;--mu:#93a0b0;--bd:#2a3542;--pr:#5aa5ee;--pr2:#1b2c40;--ok:#4cc38a;--wn:#f0a944;--er:#ef7b7b}}
 :root[data-theme="dark"]{--bg:#10151c;--card:#182029;--tx:#e8edf3;--mu:#93a0b0;--bd:#2a3542;--pr:#5aa5ee;--pr2:#1b2c40;--ok:#4cc38a;--wn:#f0a944;--er:#ef7b7b}
-html{scroll-padding-top:env(safe-area-inset-top,0px)}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-h1,h2,h3{margin:0}button,input,select{font:inherit}
-.btn{background:var(--pr);color:#fff;border:0;border-radius:8px;padding:9px 16px;cursor:pointer;font-weight:600}
-.btn.o{background:none;color:var(--pr);border:1px solid var(--pr)}
-input,select{width:100%;padding:10px 12px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--tx)}
-label{font-size:13px;color:var(--mu);display:block;margin:12px 0 4px}
-.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:20px;color:var(--pr)}
-.logo i{width:34px;height:34px;border-radius:8px;background:var(--pr);color:#fff;display:grid;place-items:center;font-style:normal}
-#login{min-height:100vh;display:grid;grid-template-columns:1.3fr 1fr}
-.ann{padding:40px;overflow:auto;max-height:100vh}
-.lg{display:grid;place-items:center;padding:24px;background:var(--pr2)}
-.lgc{background:var(--card);padding:28px;border-radius:14px;width:100%;max-width:360px;border:1px solid var(--bd)}
-.item{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:14px;margin-top:12px}
-.item small{color:var(--mu)}.tag{font-size:11px;background:var(--pr2);color:var(--pr);padding:2px 8px;border-radius:99px;margin-left:6px;font-weight:600}
-#app{display:none;min-height:100vh}
-aside{position:fixed;left:0;top:0;bottom:0;width:230px;background:var(--card);border-right:1px solid var(--bd);padding:18px 12px;padding-top:calc(18px + env(safe-area-inset-top,0px))}
-aside nav{margin-top:22px}aside a{display:block;padding:10px 12px;border-radius:8px;color:var(--tx);cursor:pointer;margin-bottom:2px}
-aside a.on{background:var(--pr2);color:var(--pr);font-weight:600}
-main{margin-left:230px;padding:24px}
-.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:10px;flex-wrap:wrap}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:18px}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+h2,h3{margin:0 0 8px}button,input,select{font:inherit}
+.btn{background:var(--pr);color:#fff;border:0;border-radius:8px;padding:9px 16px;cursor:pointer;font-weight:600}.btn.o{background:none;color:var(--pr);border:1px solid var(--pr)}.btn.s{padding:4px 10px;font-size:13px}
+input,select{width:100%;padding:9px 12px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--tx)}
+label{font-size:13px;color:var(--mu);display:block;margin:10px 0 4px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:20px;color:var(--pr)}.logo i{width:34px;height:34px;border-radius:8px;background:var(--pr);color:#fff;display:grid;place-items:center;font-style:normal}
+#login{min-height:100vh;display:grid;place-items:center;padding:24px;background:var(--pr2)}
+.lgc{background:var(--card);padding:28px;border-radius:14px;width:100%;max-width:380px;border:1px solid var(--bd)}
+#app{display:none}
+aside{position:fixed;left:0;top:0;bottom:0;width:230px;background:var(--card);border-right:1px solid var(--bd);padding:18px 12px;padding-top:calc(18px + env(safe-area-inset-top,0px));overflow:auto}
+aside nav{margin-top:20px}aside a{display:block;padding:10px 12px;border-radius:8px;cursor:pointer;margin-bottom:2px}aside a.on{background:var(--pr2);color:var(--pr);font-weight:600}
+main{margin-left:230px;padding:24px}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:10px;flex-wrap:wrap}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
 .kpi{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:14px}.kpi b{font-size:26px;display:block}.kpi span{color:var(--mu);font-size:13px}
-.box{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:16px;margin-bottom:16px}
-.sc{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:14px;min-width:560px}
-th{text-align:left;color:var(--mu);font-weight:600;font-size:12px;text-transform:uppercase;padding:8px;border-bottom:1px solid var(--bd)}td{padding:10px 8px;border-bottom:1px solid var(--bd)}
-.st{font-weight:600;font-size:12px}.ok{color:var(--ok)}.wn{color:var(--wn)}.er{color:var(--er)}
-.row{display:flex;gap:10px;flex-wrap:wrap}.row>*{flex:1;min-width:150px}
+.box{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:16px;margin-bottom:16px}.sc{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px;min-width:600px}th{text-align:left;color:var(--mu);font-size:12px;text-transform:uppercase;padding:8px;border-bottom:1px solid var(--bd)}td{padding:9px 8px;border-bottom:1px solid var(--bd)}
+.st{font-weight:600;font-size:12px}.ok{color:var(--ok)}.wn{color:var(--wn)}.er{color:var(--er)}.mu{color:var(--mu);font-size:13px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}.row>*{flex:1;min-width:140px}
 #toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--tx);color:var(--bg);padding:10px 18px;border-radius:8px;display:none;z-index:9}
-#mb{display:none}
-@media(max-width:800px){#login{grid-template-columns:1fr}.ann{max-height:none;padding:24px;order:2}.lg{order:1}
-aside{position:static;width:auto;border:0;border-bottom:1px solid var(--bd);padding-top:12px}aside nav{display:flex;gap:4px;overflow-x:auto;margin-top:10px}aside a{white-space:nowrap;margin:0}
-main{margin-left:0;padding:16px}}
+@media(max-width:800px){aside{position:static;width:auto;border:0;border-bottom:1px solid var(--bd);padding-top:12px}aside nav{display:flex;gap:4px;overflow-x:auto;margin-top:10px}aside a{white-space:nowrap;margin:0}main{margin-left:0;padding:16px}}
 </style></head><body>
-
-<section id="login">
- <div class="ann">
-  <div class="logo"><i>C</i>Canares</div>
-  <h2 style="margin-top:22px">Supplier Portal</h2>
-  <p style="color:var(--mu)">Purchase orders, delivery schedules, quality documents and invoices in one place.</p>
-  <div id="loginAnn"></div>
- </div>
- <div class="lg"><div class="lgc">
-  <h3>Login</h3>
-  <label>User ID</label><input id="u" value="SUP1001" autocomplete="username">
-  <label>Password</label><input id="p" type="password" value="demo" autocomplete="current-password">
-  <label style="display:flex;gap:8px;align-items:center;margin:14px 0"><input type="checkbox" style="width:auto"> Keep me signed in</label>
-  <button class="btn" style="width:100%" onclick="login()">Login</button>
-  <p style="text-align:center;margin:14px 0 0"><a href="#" onclick="toast('Password reset link sent (demo)');return false" style="color:var(--pr)">Forgot your password?</a></p>
-  <p style="font-size:12px;color:var(--mu);text-align:center">Demo: any User ID and password works.</p>
- </div></div>
-</section>
-
-<section id="app">
- <aside><div class="logo"><i>C</i>Canares</div><nav id="nav"></nav></aside>
- <main>
-  <div class="top"><div><h2 id="ttl"></h2><small style="color:var(--mu)" id="sub"></small></div>
-   <div><button class="btn o" onclick="logout()">Logout</button></div></div>
-  <div id="view"></div>
- </main>
-</section>
+<section id="login"><div class="lgc">
+ <div class="logo"><i>C</i>Canares</div><h3 style="margin-top:16px">Supplier Portal</h3>
+ <label>User ID (Supplier Code)</label><input id="u" placeholder="e.g. SUP-002" autocomplete="username">
+ <label>Password</label><input id="p" type="password" autocomplete="current-password" onkeydown="if(event.key=='Enter')login()">
+ <br><br><button class="btn" style="width:100%" onclick="login()">Login</button>
+ <p class="mu" style="text-align:center">Credentials are issued by Canares purchase team.</p></div></section>
+<section id="app"><aside><div class="logo"><i>C</i>Canares</div><nav id="nav"></nav></aside>
+ <main><div class="top"><div><h2 id="ttl"></h2><span class="mu" id="sub"></span></div><div id="act"></div></div><div id="view"></div></main></section>
 <div id="toast"></div>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-const $=id=>document.getElementById(id);
-const ANN=[
- {d:"30 Sep 2026",t:"Plant shutdown for stock-taking",p:"All plants",b:"No material inward on 3–4 Oct. Please plan dispatches accordingly."},
- {d:"18 Sep 2026",t:"FIP / FIR upload mandatory",p:"All plants",b:"Upload Final Inspection Plan and Report with every ASN before dispatch."},
- {d:"05 Sep 2026",t:"Use official company email domains",p:"All plants",b:"Business communication from generic email domains will not be accepted."}];
-let PO=[
- ["PO-24501","Shaft, Ground Ø32","Plant 1",500,"05 Oct 2026","Open"],
- ["PO-24502","Bearing Housing","Plant 2",240,"08 Oct 2026","Open"],
- ["PO-24488","Bracket Assy","Plant 1",1200,"01 Oct 2026","Delayed"],
- ["PO-24470","Gasket Set","Plant 3",800,"28 Sep 2026","Delivered"],
- ["PO-24519","Fastener Kit M8","Plant 2",3000,"12 Oct 2026","Open"]];
-let INV=[["INV-9012","PO-24470","₹ 1,84,000","28 Sep 2026","Under review"],["INV-8990","PO-24431","₹ 3,20,500","14 Sep 2026","Paid"],["INV-8974","PO-24402","₹ 96,750","06 Sep 2026","Paid"]];
-let DOC=[["FIP-1188","PO-24501","Approved"],["FIR-2210","PO-24470","Approved"],["FIR-2231","PO-24488","Pending review"]];
-const RFQ=[["RFQ-3301","Motor Cover, Die-cast","10 Oct 2026","Open"],["RFQ-3297","Impeller Blade","06 Oct 2026","Open"],["RFQ-3280","Seal Ring","25 Sep 2026","Closed"]];
-const cls=s=>({Open:"wn",Delayed:"er",Delivered:"ok",Paid:"ok",Approved:"ok",Closed:"","Under review":"wn","Pending review":"wn","Submitted":"ok"}[s]||"");
-const tbl=(h,r)=>`<div class="sc"><table><tr>${h.map(x=>`<th>${x}</th>`).join("")}</tr>${r.map(x=>`<tr>${x.map((c,i)=>i==x.length-1&&cls(c)!==undefined&&h[i]=="Status"?`<td><span class="st ${cls(c)}">${c}</span></td>`:`<td>${c}</td>`).join("")}</tr>`).join("")}</table></div>`;
-const annHtml=()=>ANN.map(a=>`<div class="item"><small>${a.d}</small><span class="tag">${a.p}</span><div style="font-weight:600;margin:4px 0">${a.t}</div><div style="color:var(--mu)">${a.b}</div></div>`).join("");
-$("loginAnn").innerHTML=annHtml();
+const $=id=>document.getElementById(id),E=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const ADMIN_H="9afeb6b3225edeba1f1586a0b5d9b633effccac8b088684e816f88c3447f6310";
+const sha=async s=>[...new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s)))].map(b=>b.toString(16).padStart(2,"0")).join("");
+const norm=s=>String(s||"").replace(/\s+/g,"").toUpperCase();
+const toast=m=>{const t=$("toast");t.textContent=m;t.style.display="block";setTimeout(()=>t.style.display="none",3000)};
+let SUP=[],S={po:[],gin:[],grn:[],inv:[],ann:[]},U=null,F="",cur="Dashboard";
+const EMPTY=()=>({po:[],gin:[],grn:[],inv:[],ann:[]});
+// entity definitions: [key,label,type,options]
+const ENT={
+ po:{t:"Purchase Orders",f:[["no","PO No"],["sup","Supplier Code"],["item","Item"],["qty","PO Qty","number"],["date","PO Date","date"],["due","Due Date","date"]]},
+ gin:{t:"GIN (Gate Inward)",f:[["no","GIN No"],["po","PO No"],["date","GIN Date","date"],["qty","Received Qty","number"],["dc","DC / Vehicle No"]]},
+ grn:{t:"GRN",f:[["no","GRN No"],["po","PO No"],["gin","GIN No"],["date","GRN Date","date"],["acc","Accepted Qty","number"],["rej","Rejected Qty","number"],["q","Quality","select",["Passed","Failed","Under inspection"]]]},
+ inv:{t:"Invoices",f:[["no","Invoice No"],["po","PO No"],["amt","Amount (INR)","number"],["date","Invoice Date","date"],["paid","Paid?","select",["No","Yes"]]]}
+};
+const supOf=po=>(S.po.find(p=>p.no==po)||{}).sup;
+const mine=()=>U.admin?F:U.id;
+const inScope=(k,x)=>{const m=mine();if(!m)return true;return (k=="po"?x.sup:supOf(x.po))==m};
+const L=k=>S[k].filter(x=>inScope(k,x));
+function poCalc(p){const g=S.gin.filter(x=>x.po==p.no).reduce((a,x)=>a+ +x.qty,0),r=S.grn.filter(x=>x.po==p.no),acc=r.reduce((a,x)=>a+ +x.acc,0);
+ const qOK=r.length&&r.every(x=>x.q=="Passed");const st=g>=+p.qty&&acc>=+p.qty&&qOK?"Completed":g>=+p.qty?"Delivered":"Pending";return{g,acc,st,r}}
+function invCalc(i){const p=S.po.find(x=>x.no==i.po);if(!p)return{};const c=poCalc(p),q=+p.qty;
+ const gin=c.g>=q?"Received":c.g>0?"Partial":"Pending",grn=!c.r.length?"Pending":c.acc>=q?"Posted":"Partial";
+ const ql=!c.r.length?"Not inspected":c.r.some(x=>x.q=="Failed")?"Failed":c.r.some(x=>x.q!="Passed")?"Under inspection":"Passed";
+ const pay=i.paid=="Yes"?"Paid":gin=="Received"&&grn=="Posted"&&ql=="Passed"?"Cleared for payment":"On hold";return{gin,grn,ql,pay}}
+const cl=s=>["Received","Posted","Passed","Paid","Cleared for payment","Completed","Delivered"].includes(s)?"ok":["Failed","On hold"].includes(s)?"er":"wn";
+const bd=s=>s?`<span class="st ${cl(s)}">${E(s)}</span>`:"-";
+const tbl=(h,r,e="No records yet.")=>r.length?`<div class="sc"><table><tr>${h.map(x=>`<th>${x}</th>`).join("")}</tr>${r.map(x=>`<tr>${x.map(c=>`<td>${c}</td>`).join("")}</tr>`).join("")}</table></div>`:`<p class="mu">${e}</p>`;
 
 const V={
- Dashboard(){const o=PO.filter(x=>x[5]=="Open").length,d=PO.filter(x=>x[5]=="Delayed").length;
-  return `<div class="grid"><div class="kpi"><b>${o}</b><span>Open POs</span></div><div class="kpi"><b class="er">${d}</b><span>Delayed deliveries</span></div><div class="kpi"><b>${RFQ.filter(x=>x[3]=="Open").length}</b><span>RFQs awaiting quote</span></div><div class="kpi"><b>${DOC.filter(x=>x[2]!="Approved").length}</b><span>FIR pending review</span></div></div>
-  <div class="box"><h3>Upcoming deliveries</h3>${tbl(["PO","Item","Plant","Qty","Due","Status"],PO.filter(x=>x[5]!="Delivered"))}</div>
-  <div class="box"><h3>Announcements</h3>${annHtml()}</div>`},
- "Purchase Orders"(){return `<div class="box">${tbl(["PO","Item","Plant","Qty","Due","Status"],PO)}</div>`},
- "Delivery / ASN"(){return `<div class="box"><h3>Create Advance Shipping Notice</h3>
-  <div class="row"><div><label>Purchase Order</label><select id="ap">${PO.filter(x=>x[5]!="Delivered").map(x=>`<option>${x[0]}</option>`).join("")}</select></div>
-  <div><label>Dispatch quantity</label><input id="aq" type="number" min="1" placeholder="e.g. 250"></div>
-  <div><label>Dispatch date</label><input id="ad" type="date"></div></div>
-  <div class="row"><div><label>Vehicle / LR number</label><input id="av"></div><div><label>Invoice number</label><input id="ai"></div></div>
-  <p style="color:var(--mu);font-size:13px">FIP/FIR must be uploaded under Quality Documents before dispatch.</p>
-  <button class="btn" onclick="asn()">Submit ASN</button></div>`},
- "Quality Documents"(){return `<div class="box"><h3>Upload FIP / FIR</h3>
-  <div class="row"><div><label>Type</label><select id="dt"><option>FIP</option><option>FIR</option></select></div>
-  <div><label>PO number</label><select id="dp">${PO.map(x=>`<option>${x[0]}</option>`).join("")}</select></div>
-  <div><label>File</label><input id="df" type="file"></div></div><br><button class="btn" onclick="doc()">Upload</button></div>
-  <div class="box"><h3>Submitted documents</h3>${tbl(["Document","PO","Status"],DOC)}</div>`},
- RFQs(){return `<div class="box">${tbl(["RFQ","Item","Closes","Status"],RFQ)}</div>`},
- Invoices(){return `<div class="box">${tbl(["Invoice","PO","Amount","Date","Status"],INV)}</div>`},
- Announcements(){return `<div class="box">${annHtml()}</div>`}
+ Dashboard(){const P=L("po"),c=P.map(poCalc),n=s=>c.filter(x=>x.st==s).length,dv=n("Delivered")+n("Completed"),I=L("inv").map(invCalc);
+  const k=(v,t,k2="")=>`<div class="kpi"><b class="${k2}">${v}</b><span>${t}</span></div>`;
+  return `<div class="grid">${k(P.length,"Total PO received")}${k(n("Completed"),"Completed","ok")}${k(dv,"Delivered (GIN full)")}${k(P.length-dv,"Pending","wn")}</div>
+  <div class="grid">${k(L("gin").length,"GIN entries")}${k(L("grn").length,"GRN entries")}${k(I.filter(x=>x.ql=="Failed").length,"Invoices: quality failed","er")}${k(I.filter(x=>x.pay=="On hold").length,"Invoices on hold","wn")}</div>
+  <p class="mu">Pending = not fully received at gate. Delivered = GIN qty ≥ PO qty (includes completed). Completed = delivered, GRN accepted in full and quality passed.</p>
+  <div class="box"><h3>Open POs</h3>${V["Purchase Orders"](P.filter((p,i)=>c[i].st=="Pending"),1)}</div>${annBox()}`},
+ "Purchase Orders"(P=L("po"),ro){return (U.admin&&!ro?form("po"):"")+`<div class="box">${ro?"":`<h3>Purchase Orders</h3>`}${tbl([...(U.admin?["Supplier"]:[]),"PO No","Item","PO Qty","PO Date","Due","GIN Qty","GRN Accepted","Status"],P.map(p=>{const c=poCalc(p);return[...(U.admin?[E(p.sup)]:[]),E(p.no),E(p.item),p.qty,E(p.date),E(p.due),c.g,c.acc,bd(c.st)]}))}</div>`},
+ GIN(){return (U.admin?form("gin"):"")+`<div class="box"><h3>GIN (Gate Inward)</h3>${tbl(["GIN No","PO No","Date","Qty","DC / Vehicle"],L("gin").map(x=>[E(x.no),E(x.po),E(x.date),x.qty,E(x.dc)]))}</div>`},
+ GRN(){return (U.admin?form("grn"):"")+`<div class="box"><h3>GRN</h3>${tbl(["GRN No","PO No","GIN No","Date","Accepted","Rejected","Quality"],L("grn").map(x=>[E(x.no),E(x.po),E(x.gin),E(x.date),x.acc,x.rej,bd(x.q)]))}</div>`},
+ Invoices(){return (U.admin?form("inv"):"")+`<div class="box"><h3>Invoice status</h3>${tbl(["Invoice","PO No","Amount","Date","GIN","GRN","Quality","Payment"],L("inv").map(i=>{const c=invCalc(i);return[E(i.no),E(i.po),"₹ "+(+i.amt).toLocaleString("en-IN"),E(i.date),bd(c.gin),bd(c.grn),bd(c.ql),bd(c.pay)+(U.admin&&i.paid!="Yes"?` <button class="btn s o" onclick="paid('${E(i.no)}')">Mark paid</button>`:"")]}),"No invoices yet.")}</div>`},
+ Suppliers(){const q=($("sq")||{}).value||"";const R=SUP.filter(s=>(s.name+s.id).toLowerCase().includes(q.toLowerCase())).slice(0,100);
+  return `<div class="box"><input id="sq" placeholder="Search supplier name or code" value="${E(q)}" oninput="nav('Suppliers');$('sq').focus();$('sq').setSelectionRange(99,99)"><p class="mu">${SUP.length} suppliers (showing ${R.length})</p>${tbl(["Code","Name","City","GSTIN","Contact","POs",""],R.map(s=>[E(s.id),E(s.name),E(s.city)||"-",E(s.gstin)||"-",E(s.contact)||"-",S.po.filter(p=>p.sup==s.id).length,`<button class="btn s o" onclick="F='${s.id}';nav('Dashboard')">View</button>`]))}</div>`},
+ Announcements(){return (U.admin?`<div class="box"><h3>Post announcement</h3><div class="row"><input id="at" placeholder="Title"><input id="ab" placeholder="Message"><button class="btn" style="flex:0" onclick="ann()">Post</button></div></div>`:"")+annBox(1)},
+ "Import / Export"(){return `<div class="box"><h3>Import from Excel</h3><p class="mu">Workbook with sheets named PO, GIN, GRN and Invoice. Column headers must match the template. Existing numbers are updated, new ones added.</p><div class="row"><input type="file" id="xf" accept=".xlsx,.xls,.csv"><button class="btn" style="flex:0" onclick="imp()">Import</button><button class="btn o" style="flex:0" onclick="tpl()">Template</button></div></div>
+  <div class="box"><h3>Publish data to suppliers</h3><p class="mu">Admin changes are saved in this browser only. Export <b>transactions.json</b> and replace it in the GitHub repo so suppliers see the latest PO, GIN, GRN and invoice data.</p><button class="btn" onclick="exp()">Export transactions.json</button> <button class="btn o" onclick="if(confirm('Delete all local PO, GIN, GRN and invoice data?')){S=EMPTY();save();nav(cur)}">Clear local data</button></div>`}
 };
-let cur="Dashboard";
-function nav(n){cur=n;$("ttl").textContent=n;$("sub").textContent="Supplier ID: "+($("u").value||"SUP1001");
- $("nav").innerHTML=Object.keys(V).map(k=>`<a class="${k==n?"on":""}" onclick="nav('${k}')">${k}</a>`).join("");$("view").innerHTML=V[n]();}
-function login(){if(!$("u").value||!$("p").value)return toast("Enter User ID and password");$("login").style.display="none";$("app").style.display="block";nav("Dashboard")}
-function logout(){$("app").style.display="none";$("login").style.display="grid"}
-function toast(m){const t=$("toast");t.textContent=m;t.style.display="block";setTimeout(()=>t.style.display="none",2600)}
-function asn(){if(!$("aq").value||!$("ad").value)return toast("Enter quantity and dispatch date");toast("ASN submitted for "+$("ap").value);nav("Purchase Orders")}
-function doc(){if(!$("df").files.length)return toast("Choose a file to upload");DOC.unshift([$("dt").value+"-"+(2300+DOC.length),$("dp").value,"Pending review"]);toast("Document uploaded");nav("Quality Documents")}
-
-if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))}
-let dp;window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();dp=e;const b=document.createElement("button");b.className="btn o";b.textContent="Install app";b.style.marginRight="8px";b.onclick=async()=>{dp.prompt();await dp.userChoice;b.remove()};const t=document.querySelector(".top div:last-child");if(t)t.prepend(b)});
+const annBox=full=>{const A=S.ann.slice().reverse();return (A.length||full)?`<div class="box"><h3>Announcements</h3>${A.length?A.map(a=>`<div style="margin-top:10px"><span class="mu">${E(a.d)}</span><div><b>${E(a.t)}</b></div><div class="mu">${E(a.b)}</div></div>`).join(""):'<p class="mu">No announcements.</p>'}</div>`:""};
+function form(k){const e=ENT[k];return `<div class="box"><h3>Add ${e.t}</h3><div class="row">${e.f.map(([id,l,t,o])=>`<div><label>${l}</label>${t=="select"?`<select id="f_${id}">${o.map(x=>`<option>${x}</option>`).join("")}</select>`:`<input id="f_${id}" type="${t||"text"}" ${id=="sup"?`list="sl"`:""}>`}</div>`).join("")}<button class="btn" style="flex:0" onclick="add('${k}')">Add</button></div></div>${k=="po"?`<datalist id="sl">${SUP.map(s=>`<option value="${s.id}">${E(s.name)}</option>`).join("")}</datalist>`:""}`}
+function valid(k,r){if(!r.no)return"missing number";if(k=="po"){r.sup=norm(r.sup);if(!SUP.some(s=>s.id==r.sup))return"unknown supplier"}else if(!S.po.some(p=>p.no==r.po))return"unknown PO";if(k=="inv"&&r.amt===""||k!="inv"&&k!="po"&&r.qty==="")return"";return""}
+function put(k,r){const i=S[k].findIndex(x=>x.no==r.no);i>=0?S[k][i]=r:S[k].push(r)}
+function add(k){const r={};ENT[k].f.forEach(([id])=>r[id]=$("f_"+id).value.trim());const er=valid(k,r);if(er)return toast("Cannot add: "+er);put(k,r);save();toast("Added");nav(cur)}
+function paid(n){const i=S.inv.find(x=>x.no==n);i.paid="Yes";save();nav(cur)}
+function ann(){if(!$("at").value)return toast("Enter a title");S.ann.push({t:$("at").value,b:$("ab").value,d:new Date().toLocaleDateString("en-IN")});save();nav(cur)}
+const SH={po:"PO",gin:"GIN",grn:"GRN",inv:"Invoice"};
+function tpl(){const wb=XLSX.utils.book_new();for(const k in ENT)XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([ENT[k].f.map(f=>f[1])]),SH[k]);XLSX.writeFile(wb,"Canares_Import_Template.xlsx")}
+function imp(){const f=$("xf").files[0];if(!f)return toast("Choose a file");const rd=new FileReader();rd.onload=e=>{const wb=XLSX.read(e.target.result,{type:"array",cellDates:true});let ok=0,bad=0;
+ for(const k of ["po","gin","grn","inv"]){const ws=wb.Sheets[SH[k]];if(!ws)continue;XLSX.utils.sheet_to_json(ws,{defval:""}).forEach(row=>{const r={};ENT[k].f.forEach(([id,l,t])=>{let v=row[l]??"";if(v instanceof Date)v=v.toISOString().slice(0,10);r[id]=String(v).trim()});if(k=="grn"&&!r.q)r.q="Under inspection";if(k=="inv"&&!r.paid)r.paid="No";valid(k,r)?bad++:(put(k,r),ok++)})}
+ save();toast(`Imported ${ok} rows, skipped ${bad}`);nav(cur)};rd.readAsArrayBuffer(f)}
+function exp(){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(S)],{type:"application/json"}));a.download="transactions.json";a.click()}
+const save=()=>{try{localStorage.setItem("csp_data",JSON.stringify(S))}catch(e){}};
+function menu(){return U.admin?["Dashboard","Suppliers","Purchase Orders","GIN","GRN","Invoices","Announcements","Import / Export"]:["Dashboard","Purchase Orders","GIN","GRN","Invoices","Announcements"]}
+function nav(n){cur=n;$("ttl").textContent=n;const s=SUP.find(x=>x.id==mine());
+ $("sub").innerHTML=U.admin?(F?`Viewing supplier: <b>${E(s.name)}</b> (${F}) <a href="#" onclick="F='';nav(cur);return false">show all</a>`:"All suppliers (Canares admin)"):`${E(U.name)} · ${E(U.id)}`;
+ $("act").innerHTML=`<button class="btn o" onclick="logout()">Logout</button>`;
+ $("nav").innerHTML=menu().map(k=>`<a class="${k==n?"on":""}" onclick="nav('${k}')">${k}</a>`).join("");$("view").innerHTML=V[n]()}
+async function login(){const id=norm($("u").value),h=await sha($("p").value);let u=null;
+ if(id=="ADMIN"&&h==ADMIN_H)u={admin:1,id:"ADMIN",name:"Canares Admin"};else{const s=SUP.find(x=>x.id==id);if(s&&s.ph==h)u={id:s.id,name:s.name}}
+ if(!u)return toast("Invalid User ID or password");U=u;sessionStorage.setItem("csp_u",JSON.stringify(u));await loadData();$("login").style.display="none";$("app").style.display="block";nav("Dashboard")}
+function logout(){sessionStorage.removeItem("csp_u");U=null;F="";$("app").style.display="none";$("login").style.display="grid";$("p").value=""}
+async function loadData(){let base=EMPTY();try{base=await (await fetch("transactions.json",{cache:"no-cache"})).json()}catch(e){}
+ S=Object.assign(EMPTY(),base);if(U.admin){try{const l=localStorage.getItem("csp_data");if(l)S=Object.assign(EMPTY(),JSON.parse(l))}catch(e){}}}
+(async()=>{SUP=await (await fetch("suppliers.json")).json();const u=sessionStorage.getItem("csp_u");if(u){U=JSON.parse(u);await loadData();$("login").style.display="none";$("app").style.display="block";nav("Dashboard")}})();
+if("serviceWorker" in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 </script></body></html>
