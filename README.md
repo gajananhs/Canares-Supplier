@@ -11,7 +11,11 @@ Real data loaded: 347 suppliers (Supplier Master), 327 GINs and 323 GRNs (ERP ex
 - Purchase Orders, GIN, GRN pages each have a green "+ Add" button with a form (required fields marked *).
 - Import / Export page: upload the ERP GIN file (sheets GINs + GIN Lines), the GRN file (GRNs + GRN Lines) and the PO template (sheet PO). Select several files at once.
 - Unmapped supplier names (typos in ERP) are listed on the Import / Export page; choose the right supplier and press Map.
+- Orders can be Purchase Orders or Work Orders. A GIN links to an order by its PO No or Job Work DC.
 - GIN rows without a PO No have a "Link PO" button so PO status can be tracked.
+
+## Automatic sync from canaresai.com
+See `INTEGRATION.md` (needs an API endpoint and token from canaresai.com, stored as GitHub secrets).
 
 ## Publishing changes to suppliers
 Admin changes are stored in the admin's browser only. Click "Export transactions.json" and replace that file in the GitHub repo (Add file > Upload files). The site redeploys in about a minute.

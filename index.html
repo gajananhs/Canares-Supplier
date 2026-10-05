@@ -54,7 +54,7 @@ const fd=d=>{if(!d)return"-";const[y,m,x]=d.split("-");return`${x} ${MO[+m-1]} $
 function pd(v){if(v instanceof Date)return new Date(v.getTime()-v.getTimezoneOffset()*6e4).toISOString().slice(0,10);v=String(v||"").trim().replace(/\bSept\b/i,"Sep");let m;
  if(m=v.match(/^(\d{4})-(\d{2})-(\d{2})/))return m[0];if(m=v.match(/^(\d{1,2}) ([A-Za-z]{3}) (\d{4})$/)){const i=MO.findIndex(x=>x.toLowerCase()==m[2].toLowerCase());if(i>=0)return`${m[3]}-${String(i+1).padStart(2,"0")}-${m[1].padStart(2,"0")}`}
  if(m=v.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/))return`${m[3]}-${m[2].padStart(2,"0")}-${m[1].padStart(2,"0")}`;return""}
-const EMPTY=()=>({po:[],gin:[],grn:[],ann:[],alias:{}});
+const EMPTY=()=>({po:[],gin:[],grn:[],ann:[],alias:{},synced:""});
 let SUP=[],S=EMPTY(),U=null,F="",cur="Dashboard",FM="",D=null,LN=0;
 const rs=x=>x.sup||S.alias[nk(x.supName)]||"";
 const supByInput=v=>{const a=norm(v),b=nk(v);return SUP.find(s=>s.id==a)||SUP.find(s=>nk(s.name)==b)};
@@ -67,15 +67,16 @@ const cl=s=>["Passed","Posted","Received","Cleared","Completed","Delivered"].inc
 const bd=s=>s?`<span class="st ${cl(s)}">${E(s)}</span>`:"-";
 const tbl=(h,r,e="No records.")=>r.length?`<div class="sc"><table><tr>${h.map(x=>`<th>${x}</th>`).join("")}</tr>${r.map(x=>`<tr>${x.map(c=>`<td>${c}</td>`).join("")}</tr>`).join("")}</table></div>`:`<p class="mu">${e}</p>`;
 // ---- derived data
-function poGroups(){const g={};S.po.filter(ok).forEach(l=>{(g[l.no]=g[l.no]||{no:l.no,sup:l.sup,date:l.date,due:l.due,lines:[]}).lines.push(l)});
- return Object.values(g).map(p=>{const gi=S.gin.filter(x=>x.po==p.no),q=p.lines.reduce((a,l)=>a+num(l.qty),0),rec=gi.reduce((a,x)=>a+num(x.rec),0),acc=gi.reduce((a,x)=>a+num(x.acc),0);
+function poGroups(){const g={};S.po.filter(ok).forEach(l=>{(g[l.no]=g[l.no]||{no:l.no,type:l.type||"Purchase Order",sup:l.sup,date:l.date,due:l.due,lines:[]}).lines.push(l)});
+ return Object.values(g).map(p=>{const gi=S.gin.filter(x=>ref(x)==p.no),q=p.lines.reduce((a,l)=>a+num(l.qty),0),rec=gi.reduce((a,x)=>a+num(x.rec),0),acc=gi.reduce((a,x)=>a+num(x.acc),0);
   const full=rec>=q&&q>0,done=full&&acc>=q&&gi.every(x=>x.st=="Approved"&&x.grn);return{...p,q,rec,acc,st:done?"Completed":full?"Delivered":"Pending"}}).sort((a,b)=>(b.date||"").localeCompare(a.date||""))}
 function inv(x){const g=x.grn?"Posted":"Pending",q=QMAP[x.st]||x.st||"Under inspection";return{gin:"Received",grn:g,q,all:x.st=="Approved"&&x.grn?"Cleared":x.st=="Partial"?"Partially cleared":"On hold"}}
 const cl2=s=>s=="Partially cleared"||s=="On hold"?"wn":cl(s);
 // ---- views
 const kp=(v,t,c="")=>`<div class="kpi"><b class="${c}">${v}</b><span>${t}</span></div>`;
-const ginRows=a=>a.map(x=>[E(x.no),fd(x.date),...(U.admin&&!F?[E(rs(x)||x.supName)+(rs(x)?"":' <span class="st er">unmapped</span>')]:[]),E(x.po)||'<span class="mu">not linked</span>',E(x.inv||x.dc||"-"),x.rec,x.acc,x.rej,bd(QMAP[x.st]||x.st),E(x.grn)||"-",`<button class="btn s o" onclick="D={k:'gin',no:'${E(x.no)}'};nav(cur)">Items</button>`+(U.admin&&!x.po?` <button class="btn s o" onclick="linkPO('${E(x.no)}')">Link PO</button>`:"")+delB("gin",x.no)]);
-const ginH=()=>["GIN No","Date",...(U.admin&&!F?["Supplier"]:[]),"PO No","Invoice / DC","Received","Accepted","Rejected","Quality","GRN",""];
+const ref=x=>x.po||x.dc||"";
+const ginRows=a=>a.map(x=>[fd(x.date),...(U.admin&&!F?[E(rs(x)||x.supName)+(rs(x)?"":' <span class="st er">unmapped</span>')]:[]),E(ref(x))||'<span class="mu">not linked</span>',E(x.inv||x.dc||"-"),E(x.no),x.rec,x.acc,x.rej,bd(QMAP[x.st]||x.st),E(x.grn)||"-",`<button class="btn s o" onclick="D={k:'gin',no:'${E(x.no)}'};nav(cur)">Items</button>`+(U.admin&&!x.po?` <button class="btn s o" onclick="linkPO('${E(x.no)}')">Link PO</button>`:"")+delB("gin",x.no)]);
+const ginH=()=>["Date",...(U.admin&&!F?["Supplier"]:[]),"PO / Work Order","Invoice / DC","GIN","Received","Accepted","Rejected","Quality","GRN","Items"];
 const delB=(k,n)=>U.admin?` <button class="btn s o" onclick="del('${k}','${E(n)}')">Delete</button>`:"";
 const detail=()=>{if(!D)return"";const x=S[D.k].find(y=>y.no==D.no);if(!x)return"";const g=D.k=="gin";
  return`<div class="box"><h3>${D.no} items <button class="btn s o" onclick="D=null;nav(cur)">Close</button></h3>${tbl(g?["Item Code","Item","Received","Accepted","Rejected","Store"]:["Item Code","Item","Accepted","Credited To"],x.lines.map(l=>g?[E(l.code),E(l.name),l.rec,l.acc,l.rej,E(l.store)]:[E(l.code),E(l.name),l.acc,E(l.store)]))}</div>`};
@@ -84,13 +85,13 @@ function unmapped(){const m={};[...S.gin,...S.grn].forEach(x=>{if(!rs(x))m[x.sup
 const V={
  Dashboard(){const P=poGroups(),n=s=>P.filter(p=>p.st==s).length,G=S.gin.filter(ok),Gr=S.grn.filter(ok),um=Object.keys(unmapped()).length;
   return(U.admin&&um?`<div class="box"><b class="wn">${um} supplier names in GIN/GRN are not mapped to a supplier code.</b> Those records are hidden from suppliers until mapped. <a href="#" onclick="nav('Import / Export');return false">Map now</a></div>`:"")+
-  `<div class="grid">${kp(P.length,"Total PO received")}${kp(n("Completed"),"Completed","ok")}${kp(n("Delivered")+n("Completed"),"Delivered")}${kp(n("Pending"),"Pending","wn")}</div>
+  `<div class="grid">${kp(P.length,"Total PO / WO received")}${kp(n("Completed"),"Completed","ok")}${kp(n("Delivered")+n("Completed"),"Delivered")}${kp(n("Pending"),"Pending","wn")}</div>
   <div class="grid">${kp(G.length,"GIN")}${kp(Gr.length,"GRN")}${kp(G.filter(x=>x.st=="Pending QC").length,"Pending QC","wn")}${kp(G.filter(x=>x.st=="Partial").length,"Partially accepted","wn")}${kp(G.reduce((a,x)=>a+num(x.rej),0),"Rejected qty total","er")}</div>
-  <p class="mu">PO status uses GINs tagged with that PO No. Pending = received qty below PO qty. Delivered = received qty at least PO qty. Completed = delivered, accepted in full, quality approved and GRN posted.</p>
-  <div class="box"><h3>Pending POs</h3>${poTbl(P.filter(p=>p.st=="Pending"))}</div><div class="box"><h3>Latest GINs</h3>${tbl(ginH(),ginRows(sortD(G).slice(0,8)))}</div>${annBox()}`},
- "Purchase Orders"(){return`<div class="box"><h3>Purchase Orders</h3>${poTbl(poGroups())}</div>`+detailPO()},
+  <p class="mu">${S.synced?"Data synced from canaresai.com: "+new Date(S.synced).toLocaleString("en-IN")+". ":""}Each GIN is matched to an order by its PO No or Work Order (Job Work DC). Pending = received qty below PO qty. Delivered = received qty at least PO qty. Completed = delivered, accepted in full, quality approved and GRN posted.</p>
+  <div class="box"><h3>Pending PO / Work Orders</h3>${poTbl(P.filter(p=>p.st=="Pending"))}</div><div class="box"><h3>Latest GINs</h3>${tbl(ginH(),ginRows(sortD(G).slice(0,8)))}</div>${annBox()}`},
+ "PO / Work Orders"(){return`<div class="box"><h3>PO / Work Orders</h3>${poTbl(poGroups())}</div>`+detailPO()},
  GIN(){return detail()+`<div class="box"><h3>GIN (Gate Inward)</h3>${tbl(ginH(),ginRows(sortD(S.gin.filter(ok))))}</div>`},
- GRN(){return detail()+`<div class="box"><h3>GRN</h3>${tbl(["GRN No","Date",...(U.admin&&!F?["Supplier"]:[]),"GIN No","PO No","Accepted Qty","Inspected By",""],sortD(S.grn.filter(ok)).map(x=>[E(x.no),fd(x.date),...(U.admin&&!F?[E(rs(x)||x.supName)]:[]),E(x.gin),E(x.po||(S.gin.find(g=>g.no==x.gin)||{}).po)||"-",x.qty,E(x.by)||"-",`<button class="btn s o" onclick="D={k:'grn',no:'${E(x.no)}'};nav(cur)">Items</button>`+delB("grn",x.no)]))}</div>`},
+ GRN(){return detail()+`<div class="box"><h3>GRN</h3>${tbl(["Date",...(U.admin&&!F?["Supplier"]:[]),"PO / Work Order","DC / Invoice No","GIN","GRN","Accepted Qty","Inspected By","Items"],sortD(S.grn.filter(ok)).map(x=>{const g=S.gin.find(y=>y.no==x.gin)||{};return[fd(x.date),...(U.admin&&!F?[E(rs(x)||x.supName)]:[]),E(x.po||ref(g))||"-",E(g.inv||g.dc)||"-",E(x.gin),E(x.no),x.qty,E(x.by)||"-",`<button class="btn s o" onclick="D={k:'grn',no:'${E(x.no)}'};nav(cur)">Items</button>`+delB("grn",x.no)]}))}</div>`},
  Invoices(){const G=sortD(S.gin.filter(ok).filter(x=>x.inv));return`<div class="box"><h3>Invoice status</h3><p class="mu">Invoices come from the invoice number on each GIN. GIN = goods received at gate, GRN = goods receipt posted, Quality = inspection result.</p>${tbl(["Invoice No","Invoice Date","GIN No","Supplier","GIN","GRN","Quality","Overall"],G.map(x=>{const c=inv(x);return[E(x.inv),fd(x.invDate),E(x.no),E(rs(x)?(SUP.find(s=>s.id==rs(x))||{}).name:x.supName),bd(c.gin),bd(c.grn)+(x.grn?" "+E(x.grn):""),bd(c.q),`<span class="st ${cl2(c.all)}">${c.all}</span>`]}),"No invoices.")}</div>`},
  Suppliers(){const q=($("sq")||{}).value||"",R=SUP.filter(s=>(s.name+s.id).toLowerCase().includes(q.toLowerCase())).slice(0,100);
   return`<div class="box"><input id="sq" placeholder="Search supplier name or code" value="${E(q)}" oninput="nav('Suppliers');const i=$('sq');i.focus();i.setSelectionRange(i.value.length,i.value.length)"><p class="mu">${SUP.length} suppliers (showing ${R.length})</p>${tbl(["Code","Name","City","GSTIN","POs","GINs",""],R.map(s=>[E(s.id),E(s.name),E(s.city)||"-",E(s.gstin)||"-",new Set(S.po.filter(p=>grp(p.sup)==grp(s.id)).map(p=>p.no)).size,S.gin.filter(g=>rs(g)&&grp(rs(g))==grp(s.id)).length,`<button class="btn s o" onclick="F='${s.id}';nav('Dashboard')">View</button>`]))}</div>`},
@@ -101,12 +102,12 @@ const V={
   <div class="box"><h3>Unmapped supplier names (${names.length})</h3><p class="mu">ERP names that do not match the supplier master. Pick the correct supplier and press Map.</p><datalist id="sl">${SUP.map(s=>`<option value="${s.id}">${E(s.name)}</option>`).join("")}</datalist>
   ${names.length?tbl(["ERP name","Records","Supplier code or name",""],names.map((n,i)=>[E(n),um[n],`<input list="sl" id="m${i}" placeholder="e.g. SUP-002">`,`<button class="btn s" onclick="mapN(${i})">Map</button>`])):'<p class="ok">All names are mapped.</p>'}</div>`}
 };
-const poTbl=P=>tbl([...(U.admin&&!F?["Supplier"]:[]),"PO No","PO Date","Due","Items","PO Qty","Received (GIN)","Accepted","Status",""],P.map(p=>[...(U.admin&&!F?[E(p.sup)]:[]),E(p.no),fd(p.date),fd(p.due),p.lines.length,p.q,p.rec,p.acc,bd(p.st),`<button class="btn s o" onclick="D={k:'po',no:'${E(p.no)}'};nav('Purchase Orders')">Items</button>`+delB("po",p.no)]),"No purchase orders yet.");
+const poTbl=P=>tbl([...(U.admin&&!F?["Supplier"]:[]),"PO / WO No","Type","PO Date","Due","Items","PO Qty","Received (GIN)","Accepted","Status",""],P.map(p=>[...(U.admin&&!F?[E(p.sup)]:[]),E(p.no),p.type=="Work Order"?"Work Order":"PO",fd(p.date),fd(p.due),p.lines.length,p.q,p.rec,p.acc,bd(p.st),`<button class="btn s o" onclick="D={k:'po',no:'${E(p.no)}'};nav('PO / Work Orders')">Items</button>`+delB("po",p.no)]),"No purchase orders yet.");
 const detailPO=()=>{if(!D||D.k!="po")return"";const L=S.po.filter(l=>l.no==D.no);return`<div class="box"><h3>${E(D.no)} items <button class="btn s o" onclick="D=null;nav(cur)">Close</button></h3>${tbl(["Item Code","Item","Qty","Unit Rate"],L.map(l=>[E(l.code),E(l.name),l.qty,E(l.rate)||"-"]))}</div>`};
 // ---- forms
 const FORMS={
- po:{t:"Purchase Order",h:[["no","PO No","text",1],["sup","Supplier (code or name)","text",1,"sl"],["date","PO Date","date",1],["due","Delivery Due Date","date",1]],l:[["code","Item Code","text",0],["name","Item Name","text",1],["qty","Ordered Qty","number",1],["rate","Unit Rate (INR)","number",0]]},
- gin:{t:"GIN",h:[["no","GIN No","text",1],["date","GIN Date","date",1],["sup","Supplier (code or name)","text",1,"sl"],["po","PO No (if known)","text",0],["dc","Job Work DC No","text",0],["inv","Invoice No","text",0],["invDate","Invoice Date","date",0],["veh","Vehicle No","text",0],["gp","Gate Pass No","text",0],["st","Status","select",1,["Pending QC","Approved","Partial"]],["notes","Notes","text",0]],l:[["code","Item Code","text",0],["name","Item Name","text",1],["rec","Received Qty","number",1],["acc","Accepted Qty","number",0],["rej","Rejected Qty","number",0],["store","Target Store","text",0]],note:"Invoice No or Job Work DC No is required. Accepted Qty left blank = Received minus Rejected (0 if status is Pending QC)."},
+ po:{t:"PO / Work Order",h:[["type","Type","select",1,["Purchase Order","Work Order"]],["no","PO / Work Order No","text",1],["sup","Supplier (code or name)","text",1,"sl"],["date","PO Date","date",1],["due","Delivery Due Date","date",1]],l:[["code","Item Code","text",0],["name","Item Name","text",1],["qty","Ordered Qty","number",1],["rate","Unit Rate (INR)","number",0]]},
+ gin:{t:"GIN",h:[["no","GIN No","text",1],["date","GIN Date","date",1],["sup","Supplier (code or name)","text",1,"sl"],["po","PO No / Work Order No (if known)","text",0],["dc","Job Work DC No","text",0],["inv","Invoice No","text",0],["invDate","Invoice Date","date",0],["veh","Vehicle No","text",0],["gp","Gate Pass No","text",0],["st","Status","select",1,["Pending QC","Approved","Partial"]],["notes","Notes","text",0]],l:[["code","Item Code","text",0],["name","Item Name","text",1],["rec","Received Qty","number",1],["acc","Accepted Qty","number",0],["rej","Rejected Qty","number",0],["store","Target Store","text",0]],note:"Invoice No or Job Work DC No is required. Accepted Qty left blank = Received minus Rejected (0 if status is Pending QC)."},
  grn:{t:"GRN",h:[["no","GRN No","text",1],["date","GRN Date","date",1],["sup","Supplier (code or name)","text",1,"sl"],["gin","GIN No","text",1],["po","PO No (auto from GIN)","text",0],["by","Inspected By","text",0]],l:[["code","Item Code","text",0],["name","Item Name","text",1],["acc","Accepted Qty","number",1],["store","Credited To (store)","text",0]]}
 };
 const inp=(f,c)=>{const[id,l,t,r,o]=f;const a=`class="${c}" data-k="${id}"`;return`<div><label class="${r?"req":""}">${l}</label>${t=="select"?`<select ${a}>${o.map(x=>`<option>${x}</option>`).join("")}</select>`:`<input ${a} type="${t}" ${t=="number"?'min="0" step="any"':""} ${o&&t=="text"?`list="${o}"`:""}>`}</div>`};
@@ -124,15 +125,15 @@ function saveForm(){const f=FORMS[FM],r={};f.h.forEach(([id,,,req])=>{r[id]=val(
   Object.assign(r,{supName:s.name,sup:s.id,rec:L.reduce((a,o)=>a+o.rec,0),acc:L.reduce((a,o)=>a+o.acc,0),rej:L.reduce((a,o)=>a+o.rej,0),grn:"",by:"",lines:L});S.gin.push(r)}
  else if(FM=="grn"){const g=S.gin.find(x=>x.no==r.gin);if(!g)return toast("GIN "+r.gin+" not found");if(grp(rs(g))!=grp(s.id))return toast("GIN belongs to a different supplier");
   L.forEach(o=>o.acc=num(o.acc));Object.assign(r,{supName:s.name,sup:s.id,po:r.po||g.po,qty:L.reduce((a,o)=>a+o.acc,0),lines:L});g.grn=r.no;S.grn.push(r)}
- else L.forEach(o=>S.po.push({no:r.no,sup:s.id,date:r.date,due:r.due,code:o.code,name:o.name,qty:num(o.qty),rate:o.rate}));
+ else L.forEach(o=>S.po.push({no:r.no,type:r.type,sup:s.id,date:r.date,due:r.due,code:o.code,name:o.name,qty:num(o.qty),rate:o.rate}));
  save();toast(FM.toUpperCase()+" saved");FM="";nav(FM||cur)}
-function linkPO(n){const g=S.gin.find(x=>x.no==n),p=(prompt("PO No for "+n+":")||"").trim();if(!p)return;if(!S.po.some(l=>l.no==p&&grp(l.sup)==grp(rs(g))))return toast("PO "+p+" not found for this supplier. Add or import the PO first");g.po=p;S.grn.filter(x=>x.gin==n).forEach(x=>x.po=p);save();nav(cur)}
+function linkPO(n){const g=S.gin.find(x=>x.no==n),p=(prompt("PO / Work Order No for "+n+":")||"").trim();if(!p)return;if(!S.po.some(l=>l.no==p&&grp(l.sup)==grp(rs(g))))return toast("PO "+p+" not found for this supplier. Add or import the PO first");g.po=p;S.grn.filter(x=>x.gin==n).forEach(x=>x.po=p);save();nav(cur)}
 function del(k,n){if(!confirm("Delete "+n+"?"))return;S[k]=S[k].filter(x=>x.no!=n);save();nav(cur)}
 const ann=()=>{if(!$("at").value)return toast("Enter a title");S.ann.push({t:$("at").value,b:$("ab").value,d:new Date().toLocaleDateString("en-IN")});save();nav(cur)};
 function mapN(i){const n=Object.keys(unmapped())[i],s=supByInput($("m"+i).value);if(!s)return toast("Pick a valid supplier");S.alias[nk(n)]=s.id;save();nav(cur)}
 // ---- import / export
-const POH=["PO No","Supplier Code","PO Date","Due Date","Item Code","Item Name","Ordered Qty","Unit Rate"];
-function tpl(){const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([POH,["PO-1001","SUP-002","2026-10-01","2026-10-15","ITEM-01","Sample item",100,25]]),"PO");XLSX.writeFile(wb,"Canares_PO_Template.xlsx")}
+const POH=["PO No","Type","Supplier Code","PO Date","Due Date","Item Code","Item Name","Ordered Qty","Unit Rate"];
+function tpl(){const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([POH,["PO-1001","Purchase Order","SUP-002","2026-10-01","2026-10-15","ITEM-01","Sample item",100,25]]),"PO");XLSX.writeFile(wb,"Canares_PO_Template.xlsx")}
 const rows=(wb,n)=>wb.Sheets[n]?XLSX.utils.sheet_to_json(wb.Sheets[n],{defval:"",cellDates:true,raw:false}):null;
 const T=v=>String(v??"").trim(),N=v=>num(String(v).replace(/,/g,""));
 function imp(){const fs=[...$("xf").files];if(!fs.length)return toast("Choose file(s)");let msg=[],left=fs.length;
@@ -141,17 +142,17 @@ function imp(){const fs=[...$("xf").files];if(!fs.length)return toast("Choose fi
    r.filter(x=>x["GIN No."]).forEach(x=>{const o={no:T(x["GIN No."]),date:pd(x["Date"]),supName:T(x["Supplier"]),sup:"",po:T(x["PO No."]),dc:T(x["Job Work DC"]),inv:T(x["Invoice No."]),invDate:pd(x["Invoice Date"]),veh:T(x["Vehicle No."]),gp:T(x["Gate Pass No."]),rec:N(x["Received Qty"]),acc:N(x["Accepted Qty"]),rej:N(x["Rejected Qty"]),st:T(x["Status"]),grn:T(x["GRN No."]),by:T(x["Inspected By"]),notes:T(x["Notes"]),lines:L[x["GIN No."]]||[]};S.gin=S.gin.filter(y=>y.no!=o.no);S.gin.push(o)});msg.push(r.length+" GIN")}
   if(r=rows(wb,"GRNs")){const L={};(rows(wb,"GRN Lines")||[]).forEach(l=>(L[l["GRN No."]]=L[l["GRN No."]]||[]).push({code:T(l["Item Code"]),name:T(l["Item Name"]),acc:N(l["Accepted Qty"]),store:T(l["Credited To"])}));
    r.filter(x=>x["GRN No."]).forEach(x=>{const o={no:T(x["GRN No."]),date:pd(x["Date"]),supName:T(x["Supplier"]),sup:"",gin:T(x["GIN No."]),po:T(x["PO No."]),qty:N(x["Accepted Qty"]),by:T(x["Inspected By"]),lines:L[x["GRN No."]]||[]};S.grn=S.grn.filter(y=>y.no!=o.no);S.grn.push(o)});msg.push(r.length+" GRN")}
-  if(r=rows(wb,"PO")){let ok=0,bad=0;r.forEach(x=>{const s=supByInput(x["Supplier Code"]);if(!x["PO No"]||!s)return bad++;S.po=S.po.filter(y=>!(y.no==T(x["PO No"])&&y.code==T(x["Item Code"])&&y.name==T(x["Item Name"])));S.po.push({no:T(x["PO No"]),sup:s.id,date:pd(x["PO Date"]),due:pd(x["Due Date"]),code:T(x["Item Code"]),name:T(x["Item Name"]),qty:N(x["Ordered Qty"]),rate:T(x["Unit Rate"])});ok++});msg.push(`${ok} PO lines`+(bad?` (${bad} skipped: unknown supplier or PO No)`:""))}
+  if(r=rows(wb,"PO")){let ok=0,bad=0;r.forEach(x=>{const s=supByInput(x["Supplier Code"]);if(!x["PO No"]||!s)return bad++;S.po=S.po.filter(y=>!(y.no==T(x["PO No"])&&y.code==T(x["Item Code"])&&y.name==T(x["Item Name"])));S.po.push({no:T(x["PO No"]),type:/work/i.test(x["Type"])?"Work Order":"Purchase Order",sup:s.id,date:pd(x["PO Date"]),due:pd(x["Due Date"]),code:T(x["Item Code"]),name:T(x["Item Name"]),qty:N(x["Ordered Qty"]),rate:T(x["Unit Rate"])});ok++});msg.push(`${ok} PO lines`+(bad?` (${bad} skipped: unknown supplier or PO No)`:""))}
   }catch(err){msg.push(f.name+": cannot read")}
   if(!--left){save();toast("Imported: "+(msg.join(", ")||"nothing recognised. Check sheet names"));nav(cur)}};rd.readAsArrayBuffer(f)})}
 function exp(){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(S)],{type:"application/json"}));a.download="transactions.json";a.click()}
 const save=()=>{try{localStorage.setItem("csp_data",JSON.stringify(S))}catch(e){}};
 // ---- shell
-const menu=()=>U.admin?["Dashboard","Suppliers","Purchase Orders","GIN","GRN","Invoices","Announcements","Import / Export"]:["Dashboard","Purchase Orders","GIN","GRN","Invoices","Announcements"];
-const ADD={"Purchase Orders":"po",GIN:"gin",GRN:"grn"};
+const menu=()=>U.admin?["Dashboard","Suppliers","PO / Work Orders","GIN","GRN","Invoices","Announcements","Import / Export"]:["Dashboard","PO / Work Orders","GIN","GRN","Invoices","Announcements"];
+const ADD={"PO / Work Orders":"po",GIN:"gin",GRN:"grn"};
 function nav(n){if(n!=cur){D=null;FM=""}cur=n;$("ttl").textContent=n;const s=SUP.find(x=>x.id==mine());
  $("sub").innerHTML=U.admin?(F?`Viewing supplier: <b>${E(s.name)}</b> (${F}) <a href="#" onclick="F='';nav(cur);return false">show all</a>`:"All suppliers (Canares admin)"):`${E(U.name)} · ${E(U.id)}`;
- $("act").innerHTML=(U.admin&&ADD[n]?`<button class="btn g" onclick="FM='${ADD[n]}';nav(cur);$('fm').scrollIntoView()">+ Add ${n=="Purchase Orders"?"Purchase Order":n}</button> `:"")+`<button class="btn o" onclick="logout()">Logout</button>`;
+ $("act").innerHTML=(U.admin&&ADD[n]?`<button class="btn g" onclick="FM='${ADD[n]}';nav(cur);$('fm').scrollIntoView()">+ Add ${n=="PO / Work Orders"?"PO / Work Order":n}</button> `:"")+`<button class="btn o" onclick="logout()">Logout</button>`;
  $("nav").innerHTML=menu().map(k=>`<a class="${k==n?"on":""}" onclick="nav('${k}')">${k}</a>`).join("");$("view").innerHTML=formBox()+V[n]()}
 async function login(){const id=norm($("u").value),h=await sha($("p").value);let u=null;
  if(id=="ADMIN"&&h==ADMIN_H)u={admin:1,id:"ADMIN",name:"Canares Admin"};else{const s=SUP.find(x=>x.id==id);if(s&&s.ph==h)u={id:s.id,name:s.name}}
