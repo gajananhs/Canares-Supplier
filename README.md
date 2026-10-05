@@ -1,33 +1,26 @@
 # Canares Supplier Portal (PWA)
 
-Installable supplier portal loaded with the Canares Supplier Master (347 suppliers). No dummy data.
-
-## Features
-- Supplier login (User ID = supplier code, e.g. SUP-002). Each supplier sees only their own data.
-- Dashboard: total PO received, pending, delivered and completed.
-- GIN (gate inward) and GRN (goods receipt with quality result) linked to POs.
-- Invoice status showing GIN, GRN, Quality and payment (cleared / on hold / paid).
-- Admin (Canares): add or import POs, GIN, GRN and invoices, browse suppliers, post announcements.
-
-## Status definitions
-- Pending: GIN qty is less than PO qty.
-- Delivered: GIN qty >= PO qty (includes completed).
-- Completed: delivered, GRN accepted qty >= PO qty and quality passed.
-- Invoice payment: Cleared for payment only when GIN received, GRN posted and quality passed; otherwise On hold.
+Real data loaded: 347 suppliers (Supplier Master), 327 GINs and 323 GRNs (ERP exports dated 05 Oct 2026).
 
 ## Logins
-- Suppliers: see `Supplier_Login_Credentials.xlsx` (provided separately, do NOT commit it to the repo).
-- Admin: User ID `ADMIN`, password `Canares@Admin2026`. Change it: compute the SHA-256 of a new password and replace `ADMIN_H` in `index.html`.
+- Suppliers: User ID = supplier code (e.g. SUP-002), initial password in `Supplier_Login_Credentials.xlsx` (keep it out of the repo).
+- Admin: `ADMIN` / `Canares@Admin2026`. Change by replacing `ADMIN_H` (SHA-256 of the new password) in `index.html`.
+- Master records with the same company name (e.g. SUP-002 and SUP299) are treated as one supplier and see the same data.
 
-## Files
-- `index.html` app; `suppliers.json` supplier master with password hashes; `transactions.json` PO/GIN/GRN/invoice data; `sw.js`, `manifest.webmanifest`, `icons/`; `.github/workflows/pages.yml` GitHub Pages deploy.
+## Admin: adding data
+- Purchase Orders, GIN, GRN pages each have a green "+ Add" button with a form (required fields marked *).
+- Import / Export page: upload the ERP GIN file (sheets GINs + GIN Lines), the GRN file (GRNs + GRN Lines) and the PO template (sheet PO). Select several files at once.
+- Unmapped supplier names (typos in ERP) are listed on the Import / Export page; choose the right supplier and press Map.
+- GIN rows without a PO No have a "Link PO" button so PO status can be tracked.
 
-## Workflow for data
-1. Log in as ADMIN, go to Import / Export, download the template, fill sheets PO, GIN, GRN, Invoice, import.
-2. Click Export transactions.json and replace that file in the repo. Push. Suppliers then see the new data.
+## Publishing changes to suppliers
+Admin changes are stored in the admin's browser only. Click "Export transactions.json" and replace that file in the GitHub repo (Add file > Upload files). The site redeploys in about a minute.
 
-## Important limits
-This is a static site. Data is in files, so anyone who opens the site files can read all supplier and transaction data, and logins are checked in the browser. Use it for a pilot only. For production use a backend (for example Supabase or Firebase) with server-side authentication.
+## Status rules
+- Pending: received qty (GIN tagged with the PO) is below PO qty.
+- Delivered: received qty at least PO qty.
+- Completed: delivered, accepted in full, GIN status Approved and GRN posted.
+- Invoice quality: Approved = Passed, Partial = Partially accepted, Pending QC = Under inspection.
 
-## Deploy
-Push to `main`, then Settings > Pages > Source: GitHub Actions. Local test: `python3 -m http.server 8080`.
+## Limits
+Static site: all data files are readable by anyone with the site address and logins are checked in the browser. Pilot use only; production needs a backend with server-side login.

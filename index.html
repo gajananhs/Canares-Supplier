@@ -28,7 +28,7 @@ main{margin-left:230px;padding:24px}.top{display:flex;justify-content:space-betw
 .box{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:16px;margin-bottom:16px}.sc{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:14px;min-width:600px}th{text-align:left;color:var(--mu);font-size:12px;text-transform:uppercase;padding:8px;border-bottom:1px solid var(--bd)}td{padding:9px 8px;border-bottom:1px solid var(--bd)}
 .st{font-weight:600;font-size:12px}.ok{color:var(--ok)}.wn{color:var(--wn)}.er{color:var(--er)}.mu{color:var(--mu);font-size:13px}
-.row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}.row>*{flex:1;min-width:140px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}.row>*{flex:1;min-width:140px}.fg{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:2px 12px}.ln{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;padding:8px;border:1px dashed var(--bd);border-radius:8px;margin-top:8px;position:relative}.req::after{content:" *";color:var(--er)}.btn.g{background:var(--ok)}
 #toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--tx);color:var(--bg);padding:10px 18px;border-radius:8px;display:none;z-index:9}
 @media(max-width:800px){aside{position:static;width:auto;border:0;border-bottom:1px solid var(--bd);padding-top:12px}aside nav{display:flex;gap:4px;overflow-x:auto;margin-top:10px}aside a{white-space:nowrap;margin:0}main{margin-left:0;padding:16px}}
 </style></head><body>
@@ -42,77 +42,124 @@ table{width:100%;border-collapse:collapse;font-size:14px;min-width:600px}th{text
  <main><div class="top"><div><h2 id="ttl"></h2><span class="mu" id="sub"></span></div><div id="act"></div></div><div id="view"></div></main></section>
 <div id="toast"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 const $=id=>document.getElementById(id),E=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const ADMIN_H="9afeb6b3225edeba1f1586a0b5d9b633effccac8b088684e816f88c3447f6310";
 const sha=async s=>[...new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s)))].map(b=>b.toString(16).padStart(2,"0")).join("");
-const norm=s=>String(s||"").replace(/\s+/g,"").toUpperCase();
-const toast=m=>{const t=$("toast");t.textContent=m;t.style.display="block";setTimeout(()=>t.style.display="none",3000)};
-let SUP=[],S={po:[],gin:[],grn:[],inv:[],ann:[]},U=null,F="",cur="Dashboard";
-const EMPTY=()=>({po:[],gin:[],grn:[],inv:[],ann:[]});
-// entity definitions: [key,label,type,options]
-const ENT={
- po:{t:"Purchase Orders",f:[["no","PO No"],["sup","Supplier Code"],["item","Item"],["qty","PO Qty","number"],["date","PO Date","date"],["due","Due Date","date"]]},
- gin:{t:"GIN (Gate Inward)",f:[["no","GIN No"],["po","PO No"],["date","GIN Date","date"],["qty","Received Qty","number"],["dc","DC / Vehicle No"]]},
- grn:{t:"GRN",f:[["no","GRN No"],["po","PO No"],["gin","GIN No"],["date","GRN Date","date"],["acc","Accepted Qty","number"],["rej","Rejected Qty","number"],["q","Quality","select",["Passed","Failed","Under inspection"]]]},
- inv:{t:"Invoices",f:[["no","Invoice No"],["po","PO No"],["amt","Amount (INR)","number"],["date","Invoice Date","date"],["paid","Paid?","select",["No","Yes"]]]}
-};
-const supOf=po=>(S.po.find(p=>p.no==po)||{}).sup;
+const nk=s=>String(s||"").toUpperCase().replace(/[^A-Z0-9]/g,""),norm=s=>String(s||"").replace(/\s+/g,"").toUpperCase();
+const toast=m=>{const t=$("toast");t.textContent=m;t.style.display="block";setTimeout(()=>t.style.display="none",3500)};
+const MO=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const fd=d=>{if(!d)return"-";const[y,m,x]=d.split("-");return`${x} ${MO[+m-1]} ${y}`};
+function pd(v){if(v instanceof Date)return new Date(v.getTime()-v.getTimezoneOffset()*6e4).toISOString().slice(0,10);v=String(v||"").trim().replace(/\bSept\b/i,"Sep");let m;
+ if(m=v.match(/^(\d{4})-(\d{2})-(\d{2})/))return m[0];if(m=v.match(/^(\d{1,2}) ([A-Za-z]{3}) (\d{4})$/)){const i=MO.findIndex(x=>x.toLowerCase()==m[2].toLowerCase());if(i>=0)return`${m[3]}-${String(i+1).padStart(2,"0")}-${m[1].padStart(2,"0")}`}
+ if(m=v.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/))return`${m[3]}-${m[2].padStart(2,"0")}-${m[1].padStart(2,"0")}`;return""}
+const EMPTY=()=>({po:[],gin:[],grn:[],ann:[],alias:{}});
+let SUP=[],S=EMPTY(),U=null,F="",cur="Dashboard",FM="",D=null,LN=0;
+const rs=x=>x.sup||S.alias[nk(x.supName)]||"";
+const supByInput=v=>{const a=norm(v),b=nk(v);return SUP.find(s=>s.id==a)||SUP.find(s=>nk(s.name)==b)};
 const mine=()=>U.admin?F:U.id;
-const inScope=(k,x)=>{const m=mine();if(!m)return true;return (k=="po"?x.sup:supOf(x.po))==m};
-const L=k=>S[k].filter(x=>inScope(k,x));
-function poCalc(p){const g=S.gin.filter(x=>x.po==p.no).reduce((a,x)=>a+ +x.qty,0),r=S.grn.filter(x=>x.po==p.no),acc=r.reduce((a,x)=>a+ +x.acc,0);
- const qOK=r.length&&r.every(x=>x.q=="Passed");const st=g>=+p.qty&&acc>=+p.qty&&qOK?"Completed":g>=+p.qty?"Delivered":"Pending";return{g,acc,st,r}}
-function invCalc(i){const p=S.po.find(x=>x.no==i.po);if(!p)return{};const c=poCalc(p),q=+p.qty;
- const gin=c.g>=q?"Received":c.g>0?"Partial":"Pending",grn=!c.r.length?"Pending":c.acc>=q?"Posted":"Partial";
- const ql=!c.r.length?"Not inspected":c.r.some(x=>x.q=="Failed")?"Failed":c.r.some(x=>x.q!="Passed")?"Under inspection":"Passed";
- const pay=i.paid=="Yes"?"Paid":gin=="Received"&&grn=="Posted"&&ql=="Passed"?"Cleared for payment":"On hold";return{gin,grn,ql,pay}}
-const cl=s=>["Received","Posted","Passed","Paid","Cleared for payment","Completed","Delivered"].includes(s)?"ok":["Failed","On hold"].includes(s)?"er":"wn";
+const grp=id=>{const s=SUP.find(x=>x.id==id);return s?nk(s.name):"#"+id};
+const ok=x=>{const m=mine();return !m||(rs(x)&&grp(rs(x))==grp(m))};
+const num=v=>+v||0,sortD=a=>a.slice().sort((x,y)=>(y.date||"").localeCompare(x.date||"")||y.no.localeCompare(x.no));
+const QMAP={Approved:"Passed",Partial:"Partially accepted","Pending QC":"Under inspection"};
+const cl=s=>["Passed","Posted","Received","Cleared","Completed","Delivered"].includes(s)?"ok":["Failed","Rejected"].includes(s)?"er":"wn";
 const bd=s=>s?`<span class="st ${cl(s)}">${E(s)}</span>`:"-";
-const tbl=(h,r,e="No records yet.")=>r.length?`<div class="sc"><table><tr>${h.map(x=>`<th>${x}</th>`).join("")}</tr>${r.map(x=>`<tr>${x.map(c=>`<td>${c}</td>`).join("")}</tr>`).join("")}</table></div>`:`<p class="mu">${e}</p>`;
-
+const tbl=(h,r,e="No records.")=>r.length?`<div class="sc"><table><tr>${h.map(x=>`<th>${x}</th>`).join("")}</tr>${r.map(x=>`<tr>${x.map(c=>`<td>${c}</td>`).join("")}</tr>`).join("")}</table></div>`:`<p class="mu">${e}</p>`;
+// ---- derived data
+function poGroups(){const g={};S.po.filter(ok).forEach(l=>{(g[l.no]=g[l.no]||{no:l.no,sup:l.sup,date:l.date,due:l.due,lines:[]}).lines.push(l)});
+ return Object.values(g).map(p=>{const gi=S.gin.filter(x=>x.po==p.no),q=p.lines.reduce((a,l)=>a+num(l.qty),0),rec=gi.reduce((a,x)=>a+num(x.rec),0),acc=gi.reduce((a,x)=>a+num(x.acc),0);
+  const full=rec>=q&&q>0,done=full&&acc>=q&&gi.every(x=>x.st=="Approved"&&x.grn);return{...p,q,rec,acc,st:done?"Completed":full?"Delivered":"Pending"}}).sort((a,b)=>(b.date||"").localeCompare(a.date||""))}
+function inv(x){const g=x.grn?"Posted":"Pending",q=QMAP[x.st]||x.st||"Under inspection";return{gin:"Received",grn:g,q,all:x.st=="Approved"&&x.grn?"Cleared":x.st=="Partial"?"Partially cleared":"On hold"}}
+const cl2=s=>s=="Partially cleared"||s=="On hold"?"wn":cl(s);
+// ---- views
+const kp=(v,t,c="")=>`<div class="kpi"><b class="${c}">${v}</b><span>${t}</span></div>`;
+const ginRows=a=>a.map(x=>[E(x.no),fd(x.date),...(U.admin&&!F?[E(rs(x)||x.supName)+(rs(x)?"":' <span class="st er">unmapped</span>')]:[]),E(x.po)||'<span class="mu">not linked</span>',E(x.inv||x.dc||"-"),x.rec,x.acc,x.rej,bd(QMAP[x.st]||x.st),E(x.grn)||"-",`<button class="btn s o" onclick="D={k:'gin',no:'${E(x.no)}'};nav(cur)">Items</button>`+(U.admin&&!x.po?` <button class="btn s o" onclick="linkPO('${E(x.no)}')">Link PO</button>`:"")+delB("gin",x.no)]);
+const ginH=()=>["GIN No","Date",...(U.admin&&!F?["Supplier"]:[]),"PO No","Invoice / DC","Received","Accepted","Rejected","Quality","GRN",""];
+const delB=(k,n)=>U.admin?` <button class="btn s o" onclick="del('${k}','${E(n)}')">Delete</button>`:"";
+const detail=()=>{if(!D)return"";const x=S[D.k].find(y=>y.no==D.no);if(!x)return"";const g=D.k=="gin";
+ return`<div class="box"><h3>${D.no} items <button class="btn s o" onclick="D=null;nav(cur)">Close</button></h3>${tbl(g?["Item Code","Item","Received","Accepted","Rejected","Store"]:["Item Code","Item","Accepted","Credited To"],x.lines.map(l=>g?[E(l.code),E(l.name),l.rec,l.acc,l.rej,E(l.store)]:[E(l.code),E(l.name),l.acc,E(l.store)]))}</div>`};
+const annBox=full=>{const A=S.ann.slice().reverse();return(A.length||full)?`<div class="box"><h3>Announcements</h3>${A.length?A.map(a=>`<div style="margin-top:10px"><span class="mu">${E(a.d)}</span><div><b>${E(a.t)}</b></div><div class="mu">${E(a.b)}</div></div>`).join(""):'<p class="mu">No announcements.</p>'}</div>`:""};
+function unmapped(){const m={};[...S.gin,...S.grn].forEach(x=>{if(!rs(x))m[x.supName]=(m[x.supName]||0)+1});return m}
 const V={
- Dashboard(){const P=L("po"),c=P.map(poCalc),n=s=>c.filter(x=>x.st==s).length,dv=n("Delivered")+n("Completed"),I=L("inv").map(invCalc);
-  const k=(v,t,k2="")=>`<div class="kpi"><b class="${k2}">${v}</b><span>${t}</span></div>`;
-  return `<div class="grid">${k(P.length,"Total PO received")}${k(n("Completed"),"Completed","ok")}${k(dv,"Delivered (GIN full)")}${k(P.length-dv,"Pending","wn")}</div>
-  <div class="grid">${k(L("gin").length,"GIN entries")}${k(L("grn").length,"GRN entries")}${k(I.filter(x=>x.ql=="Failed").length,"Invoices: quality failed","er")}${k(I.filter(x=>x.pay=="On hold").length,"Invoices on hold","wn")}</div>
-  <p class="mu">Pending = not fully received at gate. Delivered = GIN qty ≥ PO qty (includes completed). Completed = delivered, GRN accepted in full and quality passed.</p>
-  <div class="box"><h3>Open POs</h3>${V["Purchase Orders"](P.filter((p,i)=>c[i].st=="Pending"),1)}</div>${annBox()}`},
- "Purchase Orders"(P=L("po"),ro){return (U.admin&&!ro?form("po"):"")+`<div class="box">${ro?"":`<h3>Purchase Orders</h3>`}${tbl([...(U.admin?["Supplier"]:[]),"PO No","Item","PO Qty","PO Date","Due","GIN Qty","GRN Accepted","Status"],P.map(p=>{const c=poCalc(p);return[...(U.admin?[E(p.sup)]:[]),E(p.no),E(p.item),p.qty,E(p.date),E(p.due),c.g,c.acc,bd(c.st)]}))}</div>`},
- GIN(){return (U.admin?form("gin"):"")+`<div class="box"><h3>GIN (Gate Inward)</h3>${tbl(["GIN No","PO No","Date","Qty","DC / Vehicle"],L("gin").map(x=>[E(x.no),E(x.po),E(x.date),x.qty,E(x.dc)]))}</div>`},
- GRN(){return (U.admin?form("grn"):"")+`<div class="box"><h3>GRN</h3>${tbl(["GRN No","PO No","GIN No","Date","Accepted","Rejected","Quality"],L("grn").map(x=>[E(x.no),E(x.po),E(x.gin),E(x.date),x.acc,x.rej,bd(x.q)]))}</div>`},
- Invoices(){return (U.admin?form("inv"):"")+`<div class="box"><h3>Invoice status</h3>${tbl(["Invoice","PO No","Amount","Date","GIN","GRN","Quality","Payment"],L("inv").map(i=>{const c=invCalc(i);return[E(i.no),E(i.po),"₹ "+(+i.amt).toLocaleString("en-IN"),E(i.date),bd(c.gin),bd(c.grn),bd(c.ql),bd(c.pay)+(U.admin&&i.paid!="Yes"?` <button class="btn s o" onclick="paid('${E(i.no)}')">Mark paid</button>`:"")]}),"No invoices yet.")}</div>`},
- Suppliers(){const q=($("sq")||{}).value||"";const R=SUP.filter(s=>(s.name+s.id).toLowerCase().includes(q.toLowerCase())).slice(0,100);
-  return `<div class="box"><input id="sq" placeholder="Search supplier name or code" value="${E(q)}" oninput="nav('Suppliers');$('sq').focus();$('sq').setSelectionRange(99,99)"><p class="mu">${SUP.length} suppliers (showing ${R.length})</p>${tbl(["Code","Name","City","GSTIN","Contact","POs",""],R.map(s=>[E(s.id),E(s.name),E(s.city)||"-",E(s.gstin)||"-",E(s.contact)||"-",S.po.filter(p=>p.sup==s.id).length,`<button class="btn s o" onclick="F='${s.id}';nav('Dashboard')">View</button>`]))}</div>`},
- Announcements(){return (U.admin?`<div class="box"><h3>Post announcement</h3><div class="row"><input id="at" placeholder="Title"><input id="ab" placeholder="Message"><button class="btn" style="flex:0" onclick="ann()">Post</button></div></div>`:"")+annBox(1)},
- "Import / Export"(){return `<div class="box"><h3>Import from Excel</h3><p class="mu">Workbook with sheets named PO, GIN, GRN and Invoice. Column headers must match the template. Existing numbers are updated, new ones added.</p><div class="row"><input type="file" id="xf" accept=".xlsx,.xls,.csv"><button class="btn" style="flex:0" onclick="imp()">Import</button><button class="btn o" style="flex:0" onclick="tpl()">Template</button></div></div>
-  <div class="box"><h3>Publish data to suppliers</h3><p class="mu">Admin changes are saved in this browser only. Export <b>transactions.json</b> and replace it in the GitHub repo so suppliers see the latest PO, GIN, GRN and invoice data.</p><button class="btn" onclick="exp()">Export transactions.json</button> <button class="btn o" onclick="if(confirm('Delete all local PO, GIN, GRN and invoice data?')){S=EMPTY();save();nav(cur)}">Clear local data</button></div>`}
+ Dashboard(){const P=poGroups(),n=s=>P.filter(p=>p.st==s).length,G=S.gin.filter(ok),Gr=S.grn.filter(ok),um=Object.keys(unmapped()).length;
+  return(U.admin&&um?`<div class="box"><b class="wn">${um} supplier names in GIN/GRN are not mapped to a supplier code.</b> Those records are hidden from suppliers until mapped. <a href="#" onclick="nav('Import / Export');return false">Map now</a></div>`:"")+
+  `<div class="grid">${kp(P.length,"Total PO received")}${kp(n("Completed"),"Completed","ok")}${kp(n("Delivered")+n("Completed"),"Delivered")}${kp(n("Pending"),"Pending","wn")}</div>
+  <div class="grid">${kp(G.length,"GIN")}${kp(Gr.length,"GRN")}${kp(G.filter(x=>x.st=="Pending QC").length,"Pending QC","wn")}${kp(G.filter(x=>x.st=="Partial").length,"Partially accepted","wn")}${kp(G.reduce((a,x)=>a+num(x.rej),0),"Rejected qty total","er")}</div>
+  <p class="mu">PO status uses GINs tagged with that PO No. Pending = received qty below PO qty. Delivered = received qty at least PO qty. Completed = delivered, accepted in full, quality approved and GRN posted.</p>
+  <div class="box"><h3>Pending POs</h3>${poTbl(P.filter(p=>p.st=="Pending"))}</div><div class="box"><h3>Latest GINs</h3>${tbl(ginH(),ginRows(sortD(G).slice(0,8)))}</div>${annBox()}`},
+ "Purchase Orders"(){return`<div class="box"><h3>Purchase Orders</h3>${poTbl(poGroups())}</div>`+detailPO()},
+ GIN(){return detail()+`<div class="box"><h3>GIN (Gate Inward)</h3>${tbl(ginH(),ginRows(sortD(S.gin.filter(ok))))}</div>`},
+ GRN(){return detail()+`<div class="box"><h3>GRN</h3>${tbl(["GRN No","Date",...(U.admin&&!F?["Supplier"]:[]),"GIN No","PO No","Accepted Qty","Inspected By",""],sortD(S.grn.filter(ok)).map(x=>[E(x.no),fd(x.date),...(U.admin&&!F?[E(rs(x)||x.supName)]:[]),E(x.gin),E(x.po||(S.gin.find(g=>g.no==x.gin)||{}).po)||"-",x.qty,E(x.by)||"-",`<button class="btn s o" onclick="D={k:'grn',no:'${E(x.no)}'};nav(cur)">Items</button>`+delB("grn",x.no)]))}</div>`},
+ Invoices(){const G=sortD(S.gin.filter(ok).filter(x=>x.inv));return`<div class="box"><h3>Invoice status</h3><p class="mu">Invoices come from the invoice number on each GIN. GIN = goods received at gate, GRN = goods receipt posted, Quality = inspection result.</p>${tbl(["Invoice No","Invoice Date","GIN No","Supplier","GIN","GRN","Quality","Overall"],G.map(x=>{const c=inv(x);return[E(x.inv),fd(x.invDate),E(x.no),E(rs(x)?(SUP.find(s=>s.id==rs(x))||{}).name:x.supName),bd(c.gin),bd(c.grn)+(x.grn?" "+E(x.grn):""),bd(c.q),`<span class="st ${cl2(c.all)}">${c.all}</span>`]}),"No invoices.")}</div>`},
+ Suppliers(){const q=($("sq")||{}).value||"",R=SUP.filter(s=>(s.name+s.id).toLowerCase().includes(q.toLowerCase())).slice(0,100);
+  return`<div class="box"><input id="sq" placeholder="Search supplier name or code" value="${E(q)}" oninput="nav('Suppliers');const i=$('sq');i.focus();i.setSelectionRange(i.value.length,i.value.length)"><p class="mu">${SUP.length} suppliers (showing ${R.length})</p>${tbl(["Code","Name","City","GSTIN","POs","GINs",""],R.map(s=>[E(s.id),E(s.name),E(s.city)||"-",E(s.gstin)||"-",new Set(S.po.filter(p=>grp(p.sup)==grp(s.id)).map(p=>p.no)).size,S.gin.filter(g=>rs(g)&&grp(rs(g))==grp(s.id)).length,`<button class="btn s o" onclick="F='${s.id}';nav('Dashboard')">View</button>`]))}</div>`},
+ Announcements(){return(U.admin?`<div class="box"><h3>Post announcement</h3><div class="row"><input id="at" placeholder="Title"><input id="ab" placeholder="Message"><button class="btn" style="flex:0" onclick="ann()">Post</button></div></div>`:"")+annBox(1)},
+ "Import / Export"(){const um=unmapped(),names=Object.keys(um);
+  return`<div class="box"><h3>1. Upload ERP / Excel files</h3><p class="mu">Select one or more files at once: the GIN export (sheets <b>GINs</b> + <b>GIN Lines</b>), the GRN export (sheets <b>GRNs</b> + <b>GRN Lines</b>) and the PO template (sheet <b>PO</b>). Existing GIN / GRN / PO numbers are updated; new ones are added.</p><div class="row"><input type="file" id="xf" multiple accept=".xlsx,.xls"><button class="btn" style="flex:0" onclick="imp()">Import</button><button class="btn o" style="flex:0" onclick="tpl()">PO template</button></div></div>
+  <div class="box"><h3>2. Publish to suppliers</h3><p class="mu">Changes are saved only in this browser. Click Export, then replace <b>transactions.json</b> in your GitHub repo (Add file &gt; Upload files). Suppliers see it after the site redeploys (about a minute).</p><button class="btn g" onclick="exp()">Export transactions.json</button> <button class="btn o" onclick="if(confirm('Discard local changes and reload the published data?')){localStorage.removeItem('csp_data');loadData().then(()=>nav(cur))}">Reset to published data</button></div>
+  <div class="box"><h3>Unmapped supplier names (${names.length})</h3><p class="mu">ERP names that do not match the supplier master. Pick the correct supplier and press Map.</p><datalist id="sl">${SUP.map(s=>`<option value="${s.id}">${E(s.name)}</option>`).join("")}</datalist>
+  ${names.length?tbl(["ERP name","Records","Supplier code or name",""],names.map((n,i)=>[E(n),um[n],`<input list="sl" id="m${i}" placeholder="e.g. SUP-002">`,`<button class="btn s" onclick="mapN(${i})">Map</button>`])):'<p class="ok">All names are mapped.</p>'}</div>`}
 };
-const annBox=full=>{const A=S.ann.slice().reverse();return (A.length||full)?`<div class="box"><h3>Announcements</h3>${A.length?A.map(a=>`<div style="margin-top:10px"><span class="mu">${E(a.d)}</span><div><b>${E(a.t)}</b></div><div class="mu">${E(a.b)}</div></div>`).join(""):'<p class="mu">No announcements.</p>'}</div>`:""};
-function form(k){const e=ENT[k];return `<div class="box"><h3>Add ${e.t}</h3><div class="row">${e.f.map(([id,l,t,o])=>`<div><label>${l}</label>${t=="select"?`<select id="f_${id}">${o.map(x=>`<option>${x}</option>`).join("")}</select>`:`<input id="f_${id}" type="${t||"text"}" ${id=="sup"?`list="sl"`:""}>`}</div>`).join("")}<button class="btn" style="flex:0" onclick="add('${k}')">Add</button></div></div>${k=="po"?`<datalist id="sl">${SUP.map(s=>`<option value="${s.id}">${E(s.name)}</option>`).join("")}</datalist>`:""}`}
-function valid(k,r){if(!r.no)return"missing number";if(k=="po"){r.sup=norm(r.sup);if(!SUP.some(s=>s.id==r.sup))return"unknown supplier"}else if(!S.po.some(p=>p.no==r.po))return"unknown PO";if(k=="inv"&&r.amt===""||k!="inv"&&k!="po"&&r.qty==="")return"";return""}
-function put(k,r){const i=S[k].findIndex(x=>x.no==r.no);i>=0?S[k][i]=r:S[k].push(r)}
-function add(k){const r={};ENT[k].f.forEach(([id])=>r[id]=$("f_"+id).value.trim());const er=valid(k,r);if(er)return toast("Cannot add: "+er);put(k,r);save();toast("Added");nav(cur)}
-function paid(n){const i=S.inv.find(x=>x.no==n);i.paid="Yes";save();nav(cur)}
-function ann(){if(!$("at").value)return toast("Enter a title");S.ann.push({t:$("at").value,b:$("ab").value,d:new Date().toLocaleDateString("en-IN")});save();nav(cur)}
-const SH={po:"PO",gin:"GIN",grn:"GRN",inv:"Invoice"};
-function tpl(){const wb=XLSX.utils.book_new();for(const k in ENT)XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([ENT[k].f.map(f=>f[1])]),SH[k]);XLSX.writeFile(wb,"Canares_Import_Template.xlsx")}
-function imp(){const f=$("xf").files[0];if(!f)return toast("Choose a file");const rd=new FileReader();rd.onload=e=>{const wb=XLSX.read(e.target.result,{type:"array",cellDates:true});let ok=0,bad=0;
- for(const k of ["po","gin","grn","inv"]){const ws=wb.Sheets[SH[k]];if(!ws)continue;XLSX.utils.sheet_to_json(ws,{defval:""}).forEach(row=>{const r={};ENT[k].f.forEach(([id,l,t])=>{let v=row[l]??"";if(v instanceof Date)v=v.toISOString().slice(0,10);r[id]=String(v).trim()});if(k=="grn"&&!r.q)r.q="Under inspection";if(k=="inv"&&!r.paid)r.paid="No";valid(k,r)?bad++:(put(k,r),ok++)})}
- save();toast(`Imported ${ok} rows, skipped ${bad}`);nav(cur)};rd.readAsArrayBuffer(f)}
+const poTbl=P=>tbl([...(U.admin&&!F?["Supplier"]:[]),"PO No","PO Date","Due","Items","PO Qty","Received (GIN)","Accepted","Status",""],P.map(p=>[...(U.admin&&!F?[E(p.sup)]:[]),E(p.no),fd(p.date),fd(p.due),p.lines.length,p.q,p.rec,p.acc,bd(p.st),`<button class="btn s o" onclick="D={k:'po',no:'${E(p.no)}'};nav('Purchase Orders')">Items</button>`+delB("po",p.no)]),"No purchase orders yet.");
+const detailPO=()=>{if(!D||D.k!="po")return"";const L=S.po.filter(l=>l.no==D.no);return`<div class="box"><h3>${E(D.no)} items <button class="btn s o" onclick="D=null;nav(cur)">Close</button></h3>${tbl(["Item Code","Item","Qty","Unit Rate"],L.map(l=>[E(l.code),E(l.name),l.qty,E(l.rate)||"-"]))}</div>`};
+// ---- forms
+const FORMS={
+ po:{t:"Purchase Order",h:[["no","PO No","text",1],["sup","Supplier (code or name)","text",1,"sl"],["date","PO Date","date",1],["due","Delivery Due Date","date",1]],l:[["code","Item Code","text",0],["name","Item Name","text",1],["qty","Ordered Qty","number",1],["rate","Unit Rate (INR)","number",0]]},
+ gin:{t:"GIN",h:[["no","GIN No","text",1],["date","GIN Date","date",1],["sup","Supplier (code or name)","text",1,"sl"],["po","PO No (if known)","text",0],["dc","Job Work DC No","text",0],["inv","Invoice No","text",0],["invDate","Invoice Date","date",0],["veh","Vehicle No","text",0],["gp","Gate Pass No","text",0],["st","Status","select",1,["Pending QC","Approved","Partial"]],["notes","Notes","text",0]],l:[["code","Item Code","text",0],["name","Item Name","text",1],["rec","Received Qty","number",1],["acc","Accepted Qty","number",0],["rej","Rejected Qty","number",0],["store","Target Store","text",0]],note:"Invoice No or Job Work DC No is required. Accepted Qty left blank = Received minus Rejected (0 if status is Pending QC)."},
+ grn:{t:"GRN",h:[["no","GRN No","text",1],["date","GRN Date","date",1],["sup","Supplier (code or name)","text",1,"sl"],["gin","GIN No","text",1],["po","PO No (auto from GIN)","text",0],["by","Inspected By","text",0]],l:[["code","Item Code","text",0],["name","Item Name","text",1],["acc","Accepted Qty","number",1],["store","Credited To (store)","text",0]]}
+};
+const inp=(f,c)=>{const[id,l,t,r,o]=f;const a=`class="${c}" data-k="${id}"`;return`<div><label class="${r?"req":""}">${l}</label>${t=="select"?`<select ${a}>${o.map(x=>`<option>${x}</option>`).join("")}</select>`:`<input ${a} type="${t}" ${t=="number"?'min="0" step="any"':""} ${o&&t=="text"?`list="${o}"`:""}>`}</div>`};
+function lineRow(k){LN++;return`<div class="ln">${FORMS[k].l.map(f=>inp(f,"li")).join("")}<button class="btn s o" style="align-self:end" onclick="this.parentNode.remove()">Remove</button></div>`}
+function formBox(){if(!FM)return"";const f=FORMS[FM];return`<div class="box" id="fm"><h3>Add ${f.t}</h3><p class="mu">Fields marked <span class="er">*</span> are required.${f.note?" "+f.note:""}</p><datalist id="sl">${SUP.map(s=>`<option value="${s.id}">${E(s.name)}</option>`).join("")}</datalist><div class="fg">${f.h.map(x=>inp(x,"hi")).join("")}</div><h3 style="margin-top:14px">Items</h3><div id="lns">${lineRow(FM)}</div><br><button class="btn s o" onclick="$('lns').insertAdjacentHTML('beforeend',lineRow(FM))">+ Add item line</button><br><br><button class="btn" onclick="saveForm()">Save ${f.t}</button> <button class="btn o" onclick="FM='';nav(cur)">Cancel</button></div>`}
+const val=(e,k)=>(e.querySelector(`[data-k=${k}]`)||{}).value?.trim()||"";
+function saveForm(){const f=FORMS[FM],r={};f.h.forEach(([id,,,req])=>{r[id]=val($("fm"),id);if(req&&!r[id])r._e=r._e||`Fill ${f.h.find(x=>x[0]==id)[1]}`});
+ const L=[...document.querySelectorAll("#lns .ln")].map(e=>{const o={};f.l.forEach(([id])=>o[id]=val(e,id));return o}).filter(o=>Object.values(o).some(v=>v));
+ if(r._e)return toast(r._e);if(!L.length)return toast("Add at least one item line");
+ for(const o of L)for(const[id,lb,,req]of f.l)if(req&&!o[id])return toast("Item line: fill "+lb);
+ const s=supByInput(r.sup);if(!s)return toast("Supplier not found in master. Use the code (SUP-002) or exact name");
+ if(S[FM].some(x=>x.no==r.no)&&FM!="po")return toast(r.no+" already exists");if(FM=="po"&&S.po.some(x=>x.no==r.no))return toast(r.no+" already exists");
+ if(FM=="gin"){if(!r.inv&&!r.dc)return toast("Enter Invoice No or Job Work DC No");if(r.po&&!S.po.some(p=>p.no==r.po&&grp(p.sup)==grp(s.id)))return toast("PO "+r.po+" not found for this supplier. Add the PO first");
+  L.forEach(o=>{o.rec=num(o.rec);o.rej=num(o.rej);o.acc=o.acc!==""?num(o.acc):r.st=="Pending QC"?0:o.rec-o.rej});
+  Object.assign(r,{supName:s.name,sup:s.id,rec:L.reduce((a,o)=>a+o.rec,0),acc:L.reduce((a,o)=>a+o.acc,0),rej:L.reduce((a,o)=>a+o.rej,0),grn:"",by:"",lines:L});S.gin.push(r)}
+ else if(FM=="grn"){const g=S.gin.find(x=>x.no==r.gin);if(!g)return toast("GIN "+r.gin+" not found");if(grp(rs(g))!=grp(s.id))return toast("GIN belongs to a different supplier");
+  L.forEach(o=>o.acc=num(o.acc));Object.assign(r,{supName:s.name,sup:s.id,po:r.po||g.po,qty:L.reduce((a,o)=>a+o.acc,0),lines:L});g.grn=r.no;S.grn.push(r)}
+ else L.forEach(o=>S.po.push({no:r.no,sup:s.id,date:r.date,due:r.due,code:o.code,name:o.name,qty:num(o.qty),rate:o.rate}));
+ save();toast(FM.toUpperCase()+" saved");FM="";nav(FM||cur)}
+function linkPO(n){const g=S.gin.find(x=>x.no==n),p=(prompt("PO No for "+n+":")||"").trim();if(!p)return;if(!S.po.some(l=>l.no==p&&grp(l.sup)==grp(rs(g))))return toast("PO "+p+" not found for this supplier. Add or import the PO first");g.po=p;S.grn.filter(x=>x.gin==n).forEach(x=>x.po=p);save();nav(cur)}
+function del(k,n){if(!confirm("Delete "+n+"?"))return;S[k]=S[k].filter(x=>x.no!=n);save();nav(cur)}
+const ann=()=>{if(!$("at").value)return toast("Enter a title");S.ann.push({t:$("at").value,b:$("ab").value,d:new Date().toLocaleDateString("en-IN")});save();nav(cur)};
+function mapN(i){const n=Object.keys(unmapped())[i],s=supByInput($("m"+i).value);if(!s)return toast("Pick a valid supplier");S.alias[nk(n)]=s.id;save();nav(cur)}
+// ---- import / export
+const POH=["PO No","Supplier Code","PO Date","Due Date","Item Code","Item Name","Ordered Qty","Unit Rate"];
+function tpl(){const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([POH,["PO-1001","SUP-002","2026-10-01","2026-10-15","ITEM-01","Sample item",100,25]]),"PO");XLSX.writeFile(wb,"Canares_PO_Template.xlsx")}
+const rows=(wb,n)=>wb.Sheets[n]?XLSX.utils.sheet_to_json(wb.Sheets[n],{defval:"",cellDates:true,raw:false}):null;
+const T=v=>String(v??"").trim(),N=v=>num(String(v).replace(/,/g,""));
+function imp(){const fs=[...$("xf").files];if(!fs.length)return toast("Choose file(s)");let msg=[],left=fs.length;
+ fs.forEach(f=>{const rd=new FileReader();rd.onload=e=>{try{const wb=XLSX.read(e.target.result,{type:"array"});
+  let r;if(r=rows(wb,"GINs")){const L={};(rows(wb,"GIN Lines")||[]).forEach(l=>(L[l["GIN No."]]=L[l["GIN No."]]||[]).push({code:T(l["Item Code"]),name:T(l["Item Name"]),rec:N(l["Received Qty"]),acc:N(l["Accepted Qty"]),rej:N(l["Rejected Qty"]),store:T(l["Target Store"])}));
+   r.filter(x=>x["GIN No."]).forEach(x=>{const o={no:T(x["GIN No."]),date:pd(x["Date"]),supName:T(x["Supplier"]),sup:"",po:T(x["PO No."]),dc:T(x["Job Work DC"]),inv:T(x["Invoice No."]),invDate:pd(x["Invoice Date"]),veh:T(x["Vehicle No."]),gp:T(x["Gate Pass No."]),rec:N(x["Received Qty"]),acc:N(x["Accepted Qty"]),rej:N(x["Rejected Qty"]),st:T(x["Status"]),grn:T(x["GRN No."]),by:T(x["Inspected By"]),notes:T(x["Notes"]),lines:L[x["GIN No."]]||[]};S.gin=S.gin.filter(y=>y.no!=o.no);S.gin.push(o)});msg.push(r.length+" GIN")}
+  if(r=rows(wb,"GRNs")){const L={};(rows(wb,"GRN Lines")||[]).forEach(l=>(L[l["GRN No."]]=L[l["GRN No."]]||[]).push({code:T(l["Item Code"]),name:T(l["Item Name"]),acc:N(l["Accepted Qty"]),store:T(l["Credited To"])}));
+   r.filter(x=>x["GRN No."]).forEach(x=>{const o={no:T(x["GRN No."]),date:pd(x["Date"]),supName:T(x["Supplier"]),sup:"",gin:T(x["GIN No."]),po:T(x["PO No."]),qty:N(x["Accepted Qty"]),by:T(x["Inspected By"]),lines:L[x["GRN No."]]||[]};S.grn=S.grn.filter(y=>y.no!=o.no);S.grn.push(o)});msg.push(r.length+" GRN")}
+  if(r=rows(wb,"PO")){let ok=0,bad=0;r.forEach(x=>{const s=supByInput(x["Supplier Code"]);if(!x["PO No"]||!s)return bad++;S.po=S.po.filter(y=>!(y.no==T(x["PO No"])&&y.code==T(x["Item Code"])&&y.name==T(x["Item Name"])));S.po.push({no:T(x["PO No"]),sup:s.id,date:pd(x["PO Date"]),due:pd(x["Due Date"]),code:T(x["Item Code"]),name:T(x["Item Name"]),qty:N(x["Ordered Qty"]),rate:T(x["Unit Rate"])});ok++});msg.push(`${ok} PO lines`+(bad?` (${bad} skipped: unknown supplier or PO No)`:""))}
+  }catch(err){msg.push(f.name+": cannot read")}
+  if(!--left){save();toast("Imported: "+(msg.join(", ")||"nothing recognised. Check sheet names"));nav(cur)}};rd.readAsArrayBuffer(f)})}
 function exp(){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(S)],{type:"application/json"}));a.download="transactions.json";a.click()}
 const save=()=>{try{localStorage.setItem("csp_data",JSON.stringify(S))}catch(e){}};
-function menu(){return U.admin?["Dashboard","Suppliers","Purchase Orders","GIN","GRN","Invoices","Announcements","Import / Export"]:["Dashboard","Purchase Orders","GIN","GRN","Invoices","Announcements"]}
-function nav(n){cur=n;$("ttl").textContent=n;const s=SUP.find(x=>x.id==mine());
+// ---- shell
+const menu=()=>U.admin?["Dashboard","Suppliers","Purchase Orders","GIN","GRN","Invoices","Announcements","Import / Export"]:["Dashboard","Purchase Orders","GIN","GRN","Invoices","Announcements"];
+const ADD={"Purchase Orders":"po",GIN:"gin",GRN:"grn"};
+function nav(n){if(n!=cur){D=null;FM=""}cur=n;$("ttl").textContent=n;const s=SUP.find(x=>x.id==mine());
  $("sub").innerHTML=U.admin?(F?`Viewing supplier: <b>${E(s.name)}</b> (${F}) <a href="#" onclick="F='';nav(cur);return false">show all</a>`:"All suppliers (Canares admin)"):`${E(U.name)} · ${E(U.id)}`;
- $("act").innerHTML=`<button class="btn o" onclick="logout()">Logout</button>`;
- $("nav").innerHTML=menu().map(k=>`<a class="${k==n?"on":""}" onclick="nav('${k}')">${k}</a>`).join("");$("view").innerHTML=V[n]()}
+ $("act").innerHTML=(U.admin&&ADD[n]?`<button class="btn g" onclick="FM='${ADD[n]}';nav(cur);$('fm').scrollIntoView()">+ Add ${n=="Purchase Orders"?"Purchase Order":n}</button> `:"")+`<button class="btn o" onclick="logout()">Logout</button>`;
+ $("nav").innerHTML=menu().map(k=>`<a class="${k==n?"on":""}" onclick="nav('${k}')">${k}</a>`).join("");$("view").innerHTML=formBox()+V[n]()}
 async function login(){const id=norm($("u").value),h=await sha($("p").value);let u=null;
  if(id=="ADMIN"&&h==ADMIN_H)u={admin:1,id:"ADMIN",name:"Canares Admin"};else{const s=SUP.find(x=>x.id==id);if(s&&s.ph==h)u={id:s.id,name:s.name}}
- if(!u)return toast("Invalid User ID or password");U=u;sessionStorage.setItem("csp_u",JSON.stringify(u));await loadData();$("login").style.display="none";$("app").style.display="block";nav("Dashboard")}
+ if(!u)return toast("Invalid User ID or password");U=u;sessionStorage.setItem("csp_u",JSON.stringify(u));await loadData();start()}
+const start=()=>{$("login").style.display="none";$("app").style.display="block";cur="";nav("Dashboard")};
 function logout(){sessionStorage.removeItem("csp_u");U=null;F="";$("app").style.display="none";$("login").style.display="grid";$("p").value=""}
-async function loadData(){let base=EMPTY();try{base=await (await fetch("transactions.json",{cache:"no-cache"})).json()}catch(e){}
- S=Object.assign(EMPTY(),base);if(U.admin){try{const l=localStorage.getItem("csp_data");if(l)S=Object.assign(EMPTY(),JSON.parse(l))}catch(e){}}}
-(async()=>{SUP=await (await fetch("suppliers.json")).json();const u=sessionStorage.getItem("csp_u");if(u){U=JSON.parse(u);await loadData();$("login").style.display="none";$("app").style.display="block";nav("Dashboard")}})();
+async function loadData(){let b=EMPTY();try{b=await(await fetch("transactions.json",{cache:"no-cache"})).json()}catch(e){}S=Object.assign(EMPTY(),b);
+ if(U.admin){try{const l=localStorage.getItem("csp_data");if(l)S=Object.assign(EMPTY(),JSON.parse(l))}catch(e){}}}
+(async()=>{SUP=await(await fetch("suppliers.json")).json();const u=sessionStorage.getItem("csp_u");if(u){U=JSON.parse(u);await loadData();start()}})();
 if("serviceWorker" in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 </script></body></html>
